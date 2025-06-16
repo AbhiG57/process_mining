@@ -9,6 +9,7 @@ import About from './components/About'
 import ProcessListing from './components/ProcessListing'
 import ProcessTaskSteps from './components/ProcessTaskSteps'
 import CreateProcess from './components/CreateProcess'
+import { height } from '@fortawesome/free-brands-svg-icons/fa42Group'
 
 function App() {
   const [theme, setTheme] = useState('light');
@@ -25,6 +26,7 @@ function App() {
     <>
     <BrowserRouter>
      <NavBar theme={theme} toggleTheme={toggleTheme} />
+     <div style={{height: '90vh'}}>
       <Routes>
         <Route path='/' element={<WorkflowBuilder />} />
         <Route path="/about" element={<About />} />
@@ -36,6 +38,7 @@ function App() {
         <Route path="/process/:id" element={<ProcessTaskSteps />} />
         <Route path="/createProcess" element={<CreateProcess/>}/>
       </Routes>
+      </div>
       </BrowserRouter>
     </>
   )

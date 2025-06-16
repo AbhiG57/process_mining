@@ -18,7 +18,7 @@ import {
   faCodeMerge,
   faArrowsSplitUpAndLeft
 } from "@fortawesome/free-solid-svg-icons";
-
+import { useNavigate } from "react-router-dom";
 const taskIconMap = {
   1: faUser,
   2: faSearch,
@@ -440,7 +440,7 @@ export default function ProcessTaskSteps() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [tasks, setTasks] = useState(processData.tasks);
-
+  const navigate = useNavigate();
   const openModal = (steps, name) => {
     setModalSteps(steps);
     setModalTaskName(name);
@@ -547,7 +547,7 @@ export default function ProcessTaskSteps() {
         <div style={{ textAlign: "right", marginTop: 40, display: "flex", gap: 16, justifyContent: "flex-end" }}>
           <button style={{ background: "#23262F", color: "#fff", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Regenerate</button>
           <button style={{ background: "#23262F", color: "#fff", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Edit Tasks</button>
-          <button style={{ background: "#E6E8EB", color: "#181A20", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Approve</button>
+          <button onClick={() => navigate(`/`)} style={{ background: "#E6E8EB", color: "#181A20", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Approve</button>
         </div>
       </div>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} steps={modalSteps} taskName={modalTaskName} />

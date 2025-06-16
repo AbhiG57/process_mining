@@ -1,10 +1,11 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLayerGroup, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, NodeResizeControl } from '@xyflow/react';
 
-export default function StageNode({ data }) {
+export default function StageNode({ data, selected }) {
   return (
-    <div className="rounded-lg bg-slate-800 border-2 border-slate-600 shadow-lg p-3 min-w-[180px] min-h-[90px] flex flex-col relative text-xs">
+    <div className="flex flex-col rounded-lg bg-slate-800 border-2 border-slate-600 shadow-lg p-3 min-w-[180px] min-h-[90px] relative text-xs w-full h-full">
+      <NodeResizeControl style={{width: '10px', height: '10px',backgroundColor: 'red'}} color="#3b82f6" isVisible={selected} minWidth={120} minHeight={60} />
       <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-blue-400" />
       <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-blue-400" />
       <div className="flex items-center justify-between mb-1">
@@ -16,7 +17,7 @@ export default function StageNode({ data }) {
           <FontAwesomeIcon icon={faTrash} />
         </button>
       </div>
-      <div className="flex-1 border-2 border-dashed border-slate-700 rounded bg-slate-900/60 p-1">
+      <div className="border-2 border-dashed border-slate-700 rounded bg-slate-900/60 p-1 w-full flex-1">
         {data.children}
       </div>
     </div>

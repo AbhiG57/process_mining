@@ -22,8 +22,13 @@ const nodeTypes = {
 };
 
 const initialSidebarTasks = [
-  { id: 'offer-letter', label: 'Offer Letter Sign Off', department: 'Talent Acquisition' },
-  { id: 'prepare-workspace', label: 'Prepare Workspace', department: 'HR Department' },
+  { id: 'Product-selection', label: 'Product Selection and Review', department: 'Search results and reviews its.' },
+  { id: 'Adding-cart', label: 'Adding to Cart/Buy Now', department: 'Product to the cart' },
+  { id: 'Payment', label: 'Payment', department: 'Payment' },
+  { id: 'Order-confirmation', label: 'Order Confirmation', department: 'Order Confirmation' },
+  { id: 'Order-tracking', label: 'Order Tracking', department: 'Order Tracking' },
+  { id: 'Order-cancellation', label: 'Order Cancellation', department: 'Order Cancellation' },
+  { id: 'Order-returns', label: 'Order Returns', department: 'Order Returns' }
 ];
 
 const initialNodes = [
@@ -31,14 +36,14 @@ const initialNodes = [
     id: 'stage-1',
     type: 'stage',
     position: { x: 100, y: 100 },
-    data: { label: 'Pre-Boarding' },
-    style: { width: 220, height: 140 },
+    data: { label: 'Customer Onboarding' },
+    style: { width: 250, height: 140 },
   },
   {
     id: 'task-1',
     type: 'taskCard',
     position: { x: 120, y: 160 },
-    data: { label: 'Welcome Mail', department: 'HR Department' },
+    data: { label: 'Account Login / Creation', department: 'Customer Account Creation' },
     parentNode: 'stage-1',
     extent: 'parent',
     draggable: true,
@@ -47,20 +52,20 @@ const initialNodes = [
     id: 'ifelse-1',
     type: 'ifElse',
     position: { x: 400, y: 140 },
-    data: { label: 'Background Check?' },
+    data: { label: 'Loged In ?' },
   },
   {
     id: 'stage-2',
     type: 'stage',
     position: { x: 600, y: 100 },
-    data: { label: 'Onboarding Day 1' },
+    data: { label: 'Explore Products' },
     style: { width: 220, height: 140 },
   },
   {
     id: 'task-2',
     type: 'taskCard',
     position: { x: 620, y: 160 },
-    data: { label: 'Orientation & Paper Work', department: 'Admin' },
+    data: { label: 'Product Search', department: 'Browse Desired Products.' },
     parentNode: 'stage-2',
     extent: 'parent',
     draggable: true,
@@ -68,8 +73,8 @@ const initialNodes = [
   {
     id: 'error-1',
     type: 'errorHandler',
-    position: { x: 200, y: 350 },
-    data: { label: 'Fallback: Manual Review', description: 'HR to manually verify details.' },
+    position: { x: 350, y: 350 },
+    data: { label: 'Account Login failed', description: 'Please Contact Customer Support' },
   },
 ];
 
@@ -92,6 +97,29 @@ function isInsideStage(stageNode, position) {
   );
 }
 
+// Add a simple modal for label editing
+function LabelEditModal({ open, label, onSave, onClose, placeholder }) {
+  const [value, setValue] = useState(label || '');
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-slate-800 p-6 rounded shadow-lg min-w-[320px]">
+        <div className="mb-3 text-slate-200 font-semibold">{placeholder}</div>
+        <input
+          className="w-full p-2 rounded bg-slate-900 border border-slate-600 text-slate-100 mb-4"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          autoFocus
+        />
+        <div className="flex gap-2 justify-end">
+          <button className="px-3 py-1 rounded bg-slate-700 text-slate-200" onClick={onClose}>Cancel</button>
+          <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={() => onSave(value)}>Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WorkflowBuilder() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -99,6 +127,7 @@ export default function WorkflowBuilder() {
   const reactFlowWrapper = useRef(null);
   const stageIdRef = useRef(3); // for unique stage ids
   const taskIdRef = useRef(3); // for unique task ids
+  const [labelEdit, setLabelEdit] = useState({ open: false, nodeId: null, type: '', placeholder: '', label: '' });
 
   // Add new Stage node
   const handleAddStage = () => {
@@ -110,6 +139,7 @@ export default function WorkflowBuilder() {
       data: { label: `New Stage` },
       style: { width: 220, height: 140 },
     }));
+    setTimeout(() => setLabelEdit({ open: true, nodeId: newId, type: 'stage', placeholder: 'Rename this Stage', label: '' }), 0);
   };
 
   // Delete Stage and its children
@@ -209,8 +239,43 @@ export default function WorkflowBuilder() {
     if (node.type === 'taskCard') {
       return { ...node, data: { ...node.data, onDelete: () => handleDeleteTaskCard(node.id) } };
     }
+    if (node.type === 'ifElse') {
+      return { ...node, data: { ...node.data, onDelete: () => setNodes(nds => nds.filter(n => n.id !== node.id)) } };
+    }
+    if (node.type === 'errorHandler') {
+      return { ...node, data: { ...node.data, onDelete: () => setNodes(nds => nds.filter(n => n.id !== node.id)) } };
+    }
     return node;
   });
+
+  const handleAddIfElse = () => {
+    const newId = `ifelse-${Date.now()}`;
+    setNodes(nds => nds.concat({
+      id: newId,
+      type: 'ifElse',
+      position: { x: 300, y: 200 },
+      data: { label: 'New Condition?' },
+    }));
+    setTimeout(() => setLabelEdit({ open: true, nodeId: newId, type: 'ifElse', placeholder: 'Set the If/Else condition text', label: '' }), 0);
+  };
+
+  const handleAddErrorHandler = () => {
+    const newId = `error-${Date.now()}`;
+    setNodes(nds => nds.concat({
+      id: newId,
+      type: 'errorHandler',
+      position: { x: 400, y: 300 },
+      data: { label: 'Error Handler', description: '' },
+    }));
+    setTimeout(() => setLabelEdit({ open: true, nodeId: newId, type: 'errorHandler', placeholder: 'Change the Error Handler label', label: '' }), 0);
+  };
+
+  const handleLabelEditSave = (newLabel) => {
+    setNodes(nds => nds.map(n => n.id === labelEdit.nodeId ? { ...n, data: { ...n.data, label: newLabel } } : n));
+    setLabelEdit({ open: false, nodeId: null, type: '', placeholder: '', label: '' });
+  };
+
+  const handleLabelEditClose = () => setLabelEdit({ open: false, nodeId: null, type: '', placeholder: '', label: '' });
 
   return (
     <div className="flex h-screen bg-slate-950">
@@ -219,10 +284,12 @@ export default function WorkflowBuilder() {
         <Sidebar
           tasks={sidebarTasks}
           onAddStage={handleAddStage}
+          onAddIfElse={handleAddIfElse}
+          onAddErrorHandler={handleAddErrorHandler}
         />
       </div>
       {/* Main Canvas */}
-      <div className="flex-1 relative" ref={reactFlowWrapper}>
+      <div className="w-full h-full relative" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodesWithHandlers}
           edges={edges}
@@ -252,6 +319,16 @@ export default function WorkflowBuilder() {
           </button>
         </div>
       </div>
+      {/* Label Edit Modal */}
+      {labelEdit.open && (
+        <LabelEditModal
+          open={labelEdit.open}
+          label={labelEdit.label}
+          onSave={handleLabelEditSave}
+          onClose={handleLabelEditClose}
+          placeholder={labelEdit.placeholder}
+        />
+      )}
     </div>
   );
 } 
