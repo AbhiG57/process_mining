@@ -8,7 +8,15 @@ import {
   faShoppingCart,
   faMapMarkerAlt,
   faTruck,
-  faCreditCard
+  faCreditCard,
+  faEdit,
+  faTrash,
+  faArrowUp,
+  faArrowDown,
+  faPlus,
+  faMinus,
+  faCodeMerge,
+  faArrowsSplitUpAndLeft
 } from "@fortawesome/free-solid-svg-icons";
 
 const taskIconMap = {
@@ -155,15 +163,356 @@ function Modal({ open, onClose, steps, taskName }) {
   );
 }
 
+function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMerge, onSplit, tasks }) {
+  if (!open) return null;
+
+  const [editedTask, setEditedTask] = useState(task);
+  const [editMode, setEditMode] = useState('basic'); // 'basic', 'steps', 'reorder', 'merge', 'split'
+  const [mergeTargetTask, setMergeTargetTask] = useState('');
+  const [splitStepNumber, setSplitStepNumber] = useState(1);
+
+  const handleSave = () => {
+    onSave(editedTask);
+    onClose();
+  };
+
+  const renderEditOptions = () => {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+        <button 
+          onClick={() => setEditMode('basic')} 
+          style={{...buttonStyle, background: editMode === 'basic' ? '#3ED2B0' : '#E6E8EB'}}
+        >
+          <FontAwesomeIcon icon={faEdit} style={{ marginRight: '8px' }} />
+          Edit Task Details
+        </button>
+        <button 
+          onClick={() => setEditMode('steps')} 
+          style={{...buttonStyle, background: editMode === 'steps' ? '#3ED2B0' : '#E6E8EB'}}
+        >
+          <FontAwesomeIcon icon={faClipboardList} style={{ marginRight: '8px' }} />
+          Edit Steps
+        </button>
+        <button 
+          onClick={() => setEditMode('reorder')} 
+          style={{...buttonStyle, background: editMode === 'reorder' ? '#3ED2B0' : '#E6E8EB'}}
+        >
+          <FontAwesomeIcon icon={faArrowUp} style={{ marginRight: '8px' }} />
+          Reorder Tasks
+        </button>
+        <button 
+          onClick={() => setEditMode('merge')} 
+          style={{...buttonStyle, background: editMode === 'merge' ? '#3ED2B0' : '#E6E8EB'}}
+        >
+          <FontAwesomeIcon icon={faCodeMerge} style={{ marginRight: '8px' }} />
+          Merge with Another Task
+        </button>
+        <button 
+          onClick={() => setEditMode('split')} 
+          style={{...buttonStyle, background: editMode === 'split' ? '#3ED2B0' : '#E6E8EB'}}
+        >
+          <FontAwesomeIcon icon={faArrowsSplitUpAndLeft} style={{ marginRight: '8px' }} />
+          Split Task
+        </button>
+        <button 
+          onClick={() => onDelete(task.task_number)} 
+          style={{...buttonStyle, background: '#FF4D4D'}}
+        >
+          <FontAwesomeIcon icon={faTrash} style={{ marginRight: '8px' }} />
+          Delete Task
+        </button>
+      </div>
+    );
+  };
+
+  const renderBasicEdit = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '4px' }}>Task Name</label>
+        <input
+          type="text"
+          value={editedTask.task_name}
+          onChange={(e) => setEditedTask({...editedTask, task_name: e.target.value})}
+          style={inputStyle}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '4px' }}>Task Description</label>
+        <textarea
+          value={editedTask.task_description}
+          onChange={(e) => setEditedTask({...editedTask, task_description: e.target.value})}
+          style={{...inputStyle, minHeight: '100px'}}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '4px' }}>Task Icon</label>
+        <select
+          value={editedTask.task_number}
+          onChange={(e) => setEditedTask({...editedTask, task_number: parseInt(e.target.value)})}
+          style={inputStyle}
+        >
+          {Object.entries(taskIconMap).map(([num, icon]) => (
+            <option key={num} value={num}>
+              Task {num} ({icon.iconName})
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+
+  const renderStepsEdit = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {editedTask.steps.map((step, index) => (
+        <div key={index} style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={step}
+            onChange={(e) => {
+              const newSteps = [...editedTask.steps];
+              newSteps[index] = e.target.value;
+              setEditedTask({...editedTask, steps: newSteps});
+            }}
+            style={inputStyle}
+          />
+          <button
+            onClick={() => {
+              const newSteps = editedTask.steps.filter((_, i) => i !== index);
+              setEditedTask({...editedTask, steps: newSteps});
+            }}
+            style={{...buttonStyle, padding: '8px'}}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => setEditedTask({
+          ...editedTask,
+          steps: [...editedTask.steps, `Step ${editedTask.steps.length + 1}: `]
+        })}
+        style={buttonStyle}
+      >
+        Add Step
+      </button>
+    </div>
+  );
+
+  const renderMergeOptions = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ color: '#B0B3B8', marginBottom: '8px' }}>
+        Select a task to merge with the current task. The steps from both tasks will be combined.
+      </div>
+      <select 
+        value={mergeTargetTask} 
+        onChange={(e) => setMergeTargetTask(e.target.value)}
+        style={inputStyle}
+      >
+        <option value="">Select task to merge with...</option>
+        {tasks
+          .filter(t => t.task_number !== task.task_number)
+          .map(t => (
+            <option key={t.task_number} value={t.task_number}>
+              {t.task_name}
+            </option>
+          ))}
+      </select>
+      <button 
+        onClick={() => {
+          if (mergeTargetTask) {
+            onMerge(task.task_number, parseInt(mergeTargetTask));
+          }
+        }} 
+        style={{...buttonStyle, opacity: mergeTargetTask ? 1 : 0.5}}
+        disabled={!mergeTargetTask}
+      >
+        Merge Tasks
+      </button>
+    </div>
+  );
+
+  const renderSplitOptions = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ color: '#B0B3B8', marginBottom: '8px' }}>
+        Choose the step number where you want to split this task. The task will be divided into two separate tasks.
+      </div>
+      <input
+        type="number"
+        min="1"
+        max={editedTask.steps.length}
+        value={splitStepNumber}
+        onChange={(e) => setSplitStepNumber(Math.min(Math.max(1, parseInt(e.target.value) || 1), editedTask.steps.length))}
+        style={inputStyle}
+      />
+      <div style={{ color: '#B0B3B8', fontSize: '14px' }}>
+        Current task will be split into:
+        <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+          <li>Task 1: Steps 1 to {splitStepNumber}</li>
+          <li>Task 2: Steps {splitStepNumber + 1} to {editedTask.steps.length}</li>
+        </ul>
+      </div>
+      <button 
+        onClick={() => onSplit(task.task_number, splitStepNumber)} 
+        style={buttonStyle}
+      >
+        Split Task
+      </button>
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      background: "rgba(0,0,0,0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1000
+    }}>
+      <div style={{ background: "#23262F", color: "#fff", borderRadius: 12, padding: 32, minWidth: 500, maxWidth: 600 }}>
+        <h2 style={{ marginBottom: 16 }}>Edit Task: {task.task_name}</h2>
+        
+        {renderEditOptions()}
+        
+        <div style={{ 
+          background: '#181A20', 
+          borderRadius: 8, 
+          padding: 20, 
+          marginTop: 20 
+        }}>
+          {editMode === 'basic' && renderBasicEdit()}
+          {editMode === 'steps' && renderStepsEdit()}
+          {editMode === 'reorder' && (
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button onClick={() => onReorder(task.task_number, 'up')} style={buttonStyle}>
+                <FontAwesomeIcon icon={faArrowUp} style={{ marginRight: '8px' }} /> Move Up
+              </button>
+              <button onClick={() => onReorder(task.task_number, 'down')} style={buttonStyle}>
+                <FontAwesomeIcon icon={faArrowDown} style={{ marginRight: '8px' }} /> Move Down
+              </button>
+            </div>
+          )}
+          {editMode === 'merge' && renderMergeOptions()}
+          {editMode === 'split' && renderSplitOptions()}
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} style={{...buttonStyle, background: '#23262F'}}>Cancel</button>
+          {editMode === 'basic' && (
+            <button onClick={handleSave} style={{...buttonStyle, background: '#3ED2B0'}}>Save Changes</button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const buttonStyle = {
+  background: '#E6E8EB',
+  color: '#181A20',
+  border: 'none',
+  borderRadius: 8,
+  padding: '8px 16px',
+  fontWeight: 600,
+  fontSize: 14,
+  cursor: 'pointer',
+  transition: 'background 0.2s'
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '8px 12px',
+  borderRadius: 8,
+  border: '1px solid #35373B',
+  background: '#23262F',
+  color: '#fff',
+  fontSize: 14
+};
+
 export default function ProcessTaskSteps() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalSteps, setModalSteps] = useState([]);
   const [modalTaskName, setModalTaskName] = useState("");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [tasks, setTasks] = useState(processData.tasks);
 
   const openModal = (steps, name) => {
     setModalSteps(steps);
     setModalTaskName(name);
     setModalOpen(true);
+  };
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveTask = (updatedTask) => {
+    setTasks(tasks.map(task => 
+      task.task_number === updatedTask.task_number ? updatedTask : task
+    ));
+  };
+
+  const handleDeleteTask = (taskNumber) => {
+    setTasks(tasks.filter(task => task.task_number !== taskNumber));
+    setEditModalOpen(false);
+  };
+
+  const handleReorderTask = (taskNumber, direction) => {
+    const currentIndex = tasks.findIndex(task => task.task_number === taskNumber);
+    if (
+      (direction === 'up' && currentIndex === 0) ||
+      (direction === 'down' && currentIndex === tasks.length - 1)
+    ) return;
+
+    const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    const newTasks = [...tasks];
+    [newTasks[currentIndex], newTasks[newIndex]] = [newTasks[newIndex], newTasks[currentIndex]];
+    setTasks(newTasks);
+  };
+
+  const handleMergeTasks = (taskNumber, targetTaskNumber) => {
+    const sourceTask = tasks.find(t => t.task_number === taskNumber);
+    const targetTask = tasks.find(t => t.task_number === targetTaskNumber);
+    
+    if (sourceTask && targetTask) {
+      const mergedTask = {
+        ...targetTask,
+        task_name: `${targetTask.task_name} + ${sourceTask.task_name}`,
+        steps: [...targetTask.steps, ...sourceTask.steps]
+      };
+      
+      setTasks(tasks.filter(t => t.task_number !== taskNumber)
+        .map(t => t.task_number === targetTaskNumber ? mergedTask : t));
+    }
+    setEditModalOpen(false);
+  };
+
+  const handleSplitTask = (taskNumber, splitStep) => {
+    const taskToSplit = tasks.find(t => t.task_number === taskNumber);
+    if (taskToSplit && splitStep < taskToSplit.steps.length) {
+      const firstPart = {
+        ...taskToSplit,
+        task_name: `${taskToSplit.task_name} (Part 1)`,
+        steps: taskToSplit.steps.slice(0, splitStep)
+      };
+      
+      const secondPart = {
+        ...taskToSplit,
+        task_number: Math.max(...tasks.map(t => t.task_number)) + 1,
+        task_name: `${taskToSplit.task_name} (Part 2)`,
+        steps: taskToSplit.steps.slice(splitStep)
+      };
+      
+      setTasks(tasks.filter(t => t.task_number !== taskNumber)
+        .concat([firstPart, secondPart]));
+    }
+    setEditModalOpen(false);
   };
 
   return (
@@ -175,7 +524,7 @@ export default function ProcessTaskSteps() {
         <div style={{ color: "#B0B3B8", fontSize: 16, marginBottom: 32 }}>{processData.video_analysis_summary}</div>
         <h2 style={{ fontSize: 24, fontWeight: 600, margin: "32px 0 16px" }}>Process Tasks</h2>
         <div style={{ borderLeft: "2px solid #35373B", marginLeft: 16, paddingLeft: 25 }}>
-          {processData.tasks.map((task, idx) => (
+          {tasks.map((task, idx) => (
             <div key={task.task_number} style={{ display: "flex", alignItems: "flex-start", marginBottom: 36, position: "relative" }}>
               <div style={{ position: "absolute", left: -38, top: 0, fontSize: 28, color: "#B0B3B8" }}>
                 <FontAwesomeIcon icon={taskIconMap[task.task_number]} />
@@ -183,9 +532,14 @@ export default function ProcessTaskSteps() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 2 }}>{task.task_name}</div>
                 <div style={{ color: "#B0B3B8", fontSize: 15, marginBottom: 2 }}>{task.task_description}</div>
-                <button onClick={() => openModal(task.steps, task.task_name)} style={{ background: "none", color: "#3ED2B0", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                  <FontAwesomeIcon icon={faClipboardList} style={{ color: "#3ED2B0" }} /> VIEW STEPS
-                </button>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => openModal(task.steps, task.task_name)} style={{ background: "none", color: "#3ED2B0", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                    <FontAwesomeIcon icon={faClipboardList} style={{ color: "#3ED2B0" }} /> VIEW STEPS
+                  </button>
+                  <button onClick={() => handleEditTask(task)} style={{ background: "none", color: "#E6E8EB", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                    <FontAwesomeIcon icon={faEdit} style={{ color: "#E6E8EB" }} /> EDIT
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -197,6 +551,17 @@ export default function ProcessTaskSteps() {
         </div>
       </div>
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} steps={modalSteps} taskName={modalTaskName} />
+      <EditTaskModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        task={editingTask}
+        onSave={handleSaveTask}
+        onDelete={handleDeleteTask}
+        onReorder={handleReorderTask}
+        onMerge={handleMergeTasks}
+        onSplit={handleSplitTask}
+        tasks={tasks}
+      />
     </div>
   );
 } 
