@@ -5,6 +5,7 @@ import { ReactFlow,
   addEdge,
   useNodesState,
   useEdgesState,
+  useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
@@ -128,6 +129,10 @@ export default function WorkflowBuilder() {
   const stageIdRef = useRef(3); // for unique stage ids
   const taskIdRef = useRef(3); // for unique task ids
   const [labelEdit, setLabelEdit] = useState({ open: false, nodeId: null, type: '', placeholder: '', label: '' });
+
+  // Edge selection state
+  const [selectedEdge, setSelectedEdge] = useState(null);
+  const [showEdgeDeleteHelp, setShowEdgeDeleteHelp] = useState(false);
 
   // Add new Stage node
   const handleAddStage = () => {
@@ -277,6 +282,31 @@ export default function WorkflowBuilder() {
 
   const handleLabelEditClose = () => setLabelEdit({ open: false, nodeId: null, type: '', placeholder: '', label: '' });
 
+  // Edge selection handler
+  const onEdgeClick = (event, edge) => {
+    setSelectedEdge(edge.id);
+    setShowEdgeDeleteHelp(true);
+  };
+
+  // Keyboard event handler
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedEdge) {
+        setEdges(eds => eds.filter(e => e.id !== selectedEdge));
+        setSelectedEdge(null);
+        setShowEdgeDeleteHelp(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedEdge, setEdges]);
+
+  // Deselect edge on canvas click
+  const onPaneClick = () => {
+    setSelectedEdge(null);
+    setShowEdgeDeleteHelp(false);
+  };
+
   return (
     <div className="flex h-screen bg-slate-950">
       {/* Sidebar */}
@@ -305,10 +335,24 @@ export default function WorkflowBuilder() {
           onNodeDragStop={onNodeDragStop}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onEdgeClick={onEdgeClick}
+          onPaneClick={onPaneClick}
         >
           <Background color="#334155" gap={32} />
           <Controls showInteractive={false} />
+          {/* Edge selection highlight */}
+          {selectedEdge && (
+            <>
+              {/* Optionally, you can add a visual highlight to the selected edge here */}
+            </>
+          )}
         </ReactFlow>
+        {/* Edge delete help tooltip */}
+        {showEdgeDeleteHelp && selectedEdge && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded shadow z-50 text-sm animate-pulse">
+            Press <b>Delete</b> key after selecting a connection to remove it.
+          </div>
+        )}
         {/* Save/Run Buttons */}
         <div className="absolute bottom-6 right-8 flex gap-4">
           <button className="bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded text-sm font-semibold shadow">
