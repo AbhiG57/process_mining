@@ -5,7 +5,7 @@ export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHand
   return (
     <div className="w-60 bg-slate-900 border-r border-slate-800 p-3 flex flex-col gap-5 h-full">
       <div>
-        <div className="text-slate-400 font-semibold mb-1 text-xs">Workflow Elements</div>
+        <div className="text-slate-400 font-semibold mb-1 text-xs">Process Elements</div>
         <div className="flex flex-col gap-2">
           <button
             className="flex items-center gap-2 p-2 rounded bg-slate-800 text-xs text-slate-100 hover:bg-blue-900 transition"

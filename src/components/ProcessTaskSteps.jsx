@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
@@ -363,17 +363,18 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
   return (
     <div style={{
       position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
+      top: 64,
+      right: 0,
+      width: 540,
+      maxHeight: 'calc(100vh - 64px)',
+      height: 'calc(100vh - 64px)',
       background: "rgba(0,0,0,0.5)",
       display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
+      alignItems: "flex-end",
+      justifyContent: "flex-end",
       zIndex: 1000
     }}>
-      <div style={{ background: "#23262F", color: "#fff", borderRadius: 12, padding: 32, minWidth: 500, maxWidth: 600 }}>
+      <div style={{ background: "#23262F", color: "#fff", borderRadius: 12, padding: 32, minWidth: 500, maxWidth: 600, height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)', overflow: 'auto', marginRight: 0 }}>
         <h2 style={{ marginBottom: 16 }}>Edit Task: {task.task_name}</h2>
         
         {renderEditOptions()}
@@ -441,6 +442,10 @@ export default function ProcessTaskSteps() {
   const [editingTask, setEditingTask] = useState(null);
   const [tasks, setTasks] = useState(processData.tasks);
   const navigate = useNavigate();
+  const [reorderedTask, setReorderedTask] = useState(null);
+  const [showReorderMsg, setShowReorderMsg] = useState(false);
+  const reorderTimeout = useRef(null);
+
   const openModal = (steps, name) => {
     setModalSteps(steps);
     setModalTaskName(name);
@@ -474,6 +479,13 @@ export default function ProcessTaskSteps() {
     const newTasks = [...tasks];
     [newTasks[currentIndex], newTasks[newIndex]] = [newTasks[newIndex], newTasks[currentIndex]];
     setTasks(newTasks);
+    setReorderedTask(newTasks[newIndex].task_number);
+    setShowReorderMsg(true);
+    if (reorderTimeout.current) clearTimeout(reorderTimeout.current);
+    reorderTimeout.current = setTimeout(() => {
+      setReorderedTask(null);
+      setShowReorderMsg(false);
+    }, 2000);
   };
 
   const handleMergeTasks = (taskNumber, targetTaskNumber) => {
@@ -523,9 +535,41 @@ export default function ProcessTaskSteps() {
         </h1>
         <div style={{ color: "#B0B3B8", fontSize: 16, marginBottom: 32 }}>{processData.video_analysis_summary}</div>
         <h2 style={{ fontSize: 24, fontWeight: 600, margin: "32px 0 16px" }}>Process Tasks</h2>
+        {showReorderMsg && (
+          <div style={{
+            background: '#23262F',
+            color: '#3ED2B0',
+            border: '1px solid #3ED2B0',
+            borderRadius: 8,
+            padding: '10px 20px',
+            marginBottom: 16,
+            fontWeight: 600,
+            fontSize: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            boxShadow: '0 2px 8px 0 #3ED2B055',
+            justifyContent: 'center',
+          }}>
+            ✔️ Task moved! Highlighted below.
+          </div>
+        )}
         <div style={{ borderLeft: "2px solid #35373B", marginLeft: 16, paddingLeft: 25 }}>
           {tasks.map((task, idx) => (
-            <div key={task.task_number} style={{ display: "flex", alignItems: "flex-start", marginBottom: 36, position: "relative" }}>
+            <div key={task.task_number}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                marginBottom: 36,
+                position: "relative",
+                transition: 'box-shadow 0.4s, background 0.4s',
+                boxShadow: reorderedTask === task.task_number ? '0 0 0 4px #3ED2B0, 0 2px 16px #23262F' : undefined,
+                background: reorderedTask === task.task_number ? '#23262F' : undefined,
+                color: reorderedTask === task.task_number ? '#3ED2B0' : undefined,
+                borderRadius: reorderedTask === task.task_number ? 12 : undefined,
+                animation: reorderedTask === task.task_number ? 'slideIn 0.4s' : undefined
+              }}
+            >
               <div style={{ position: "absolute", left: -38, top: 0, fontSize: 28, color: "#B0B3B8" }}>
                 <FontAwesomeIcon icon={taskIconMap[task.task_number]} />
               </div>
@@ -562,6 +606,12 @@ export default function ProcessTaskSteps() {
         onSplit={handleSplitTask}
         tasks={tasks}
       />
+      <style>{`
+        @keyframes slideIn {
+          from { transform: translateY(20px); opacity: 0.5; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 } 
