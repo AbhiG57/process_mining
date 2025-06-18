@@ -207,284 +207,176 @@ export default function CreateProcess() {
   };
 
   return (
-    <div style={{ background: "#181A20", color: "#fff", minHeight: "100vh", fontFamily: "Inter, sans-serif", padding: 40 }}>
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 32 }}>Configure New Process</h1>
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white p-10 font-sans">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Configure New Process</h1>
+        
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "flex", gap: 24, marginBottom: 24 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontWeight: 600, marginBottom: 8, display: "block" }}>Process Title *</label>
+          <div className="flex gap-6 mb-6">
+            <div className="flex-1">
+              <label className="block font-semibold mb-2">Process Title *</label>
               <input
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Enter a descriptive title for the process"
                 required
-                style={{ width: "100%", padding: 16, borderRadius: 8, border: "none", background: "#23262F", color: "#fff", marginBottom: 0, fontSize: 16 }}
+                className="w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontWeight: 600, marginBottom: 8, display: "block" }}>Description *</label>
+            <div className="flex-1">
+              <label className="block font-semibold mb-2">Description *</label>
               <input
                 type="text"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Enter a description of the process"
                 required
-                style={{ width: "100%", padding: 16, borderRadius: 8, border: "none", background: "#23262F", color: "#fff", marginBottom: 0, fontSize: 16 }}
+                className="w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
-          <div style={{ marginBottom: 16, fontWeight: 600, fontSize: 18 }}>Data Source Configuration <span style={{ color: "#B0B3B8", fontWeight: 400, fontSize: 16, marginLeft: 16, cursor: "pointer" }}><FontAwesomeIcon icon={faPlus} /> New</span></div>
-          <div style={{ display: "flex", gap: 32, borderBottom: "2px solid #35373B", marginBottom: 24 }}>
-            {dataSourceTabs.map((tab, idx) => (
-              <div
-                key={tab.label}
-                onClick={() => setActiveTab(idx)}
-                style={{
-                  cursor: "pointer",
-                  paddingBottom: 12,
-                  borderBottom: activeTab === idx ? "3px solid #fff" : "none",
-                  color: activeTab === idx ? "#fff" : "#B0B3B8",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  minWidth: 100
-                }}
-              >
-                <FontAwesomeIcon icon={tab.icon} size="lg" style={{ marginBottom: 4 }} />
-                <span style={{ fontWeight: 600, fontSize: 15 }}>{tab.label}</span>
-              </div>
-            ))}
+
+          <div className="mb-4">
+            <div className="text-lg font-semibold mb-4">
+              Data Source Configuration 
+              <span className="text-gray-500 dark:text-gray-400 font-normal ml-4 cursor-pointer">
+                <FontAwesomeIcon icon={faPlus} /> New
+              </span>
+            </div>
+            
+            <div className="flex gap-8 border-b-2 border-gray-200 dark:border-gray-700 mb-6">
+              {dataSourceTabs.map((tab, idx) => (
+                <div
+                  key={tab.label}
+                  onClick={() => setActiveTab(idx)}
+                  className={`cursor-pointer pb-3 flex flex-col items-center min-w-[100px] ${
+                    activeTab === idx 
+                      ? 'border-b-3 border-white text-white' 
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  <FontAwesomeIcon icon={tab.icon} className="text-xl mb-1" />
+                  <span className="font-semibold text-sm">{tab.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
           {activeTab === 0 && (
             <>
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ fontWeight: 600, marginBottom: 8, display: "block" }}>Data Source Link URL</label>
-                <div style={{ position: "relative" }}>
+              <div className="mb-6">
+                <label className="block font-semibold mb-2">Data Source Link URL</label>
+                <div className="relative">
                   <input
                     type="url"
                     value={dataSourceUrl}
                     onChange={e => setDataSourceUrl(e.target.value)}
                     placeholder="Enter the URL of the data source"
-                    style={{ 
-                      width: "100%", 
-                      padding: "16px 40px 16px 16px", 
-                      borderRadius: 8, 
-                      border: "none", 
-                      background: "#23262F", 
-                      color: "#fff", 
-                      fontSize: 16 
-                    }}
+                    className="w-full px-4 py-3 pr-10 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-blue-500"
                   />
                   {dataSourceUrl && (
                     <button
                       type="button"
                       onClick={() => setDataSourceUrl("")}
-                      style={{
-                        position: "absolute",
-                        right: 12,
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "none",
-                        border: "none",
-                        color: "#B0B3B8",
-                        cursor: "pointer",
-                        padding: 4
-                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                     >
                       <FontAwesomeIcon icon={faTimes} />
                     </button>
                   )}
                 </div>
               </div>
-              <div style={{ textAlign: "center", color: "#B0B3B8", margin: "24px 0 16px", fontWeight: 600 }}>OR</div>
+
+              <div className="text-center text-gray-500 dark:text-gray-400 my-6 font-semibold">OR</div>
+
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                style={{
-                  border: `2px dashed ${isDragging ? "#3ED2B0" : "#35373B"}`,
-                  borderRadius: 16,
-                  padding: 40,
-                  textAlign: "center",
-                  marginBottom: 32,
-                  background: isDragging ? "rgba(62, 210, 176, 0.1)" : "transparent",
-                  transition: "all 0.3s ease",
-                  position: "relative"
-                }}
+                className={`border-2 border-dashed rounded-xl p-10 text-center mb-8 transition-all ${
+                  isDragging 
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/10' 
+                    : 'border-gray-300 dark:border-gray-700'
+                }`}
               >
-                {!file && (
+                {!file ? (
                   <>
-                    <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Drag and drop files here</div>
-                    <div style={{ color: "#B0B3B8", marginBottom: 16 }}>
+                    <div className="text-xl font-bold mb-2">Drag and drop files here</div>
+                    <div className="text-gray-500 dark:text-gray-400 mb-4">
                       Or click to browse. Supported types: images (PNG, JPG, GIF), videos (MP4, MOV, AVI), PDF
                     </div>
                     <input
                       ref={fileInputRef}
                       type="file"
                       id="file-upload"
-                      style={{ display: "none" }}
+                      className="hidden"
                       onChange={handleFileChange}
                       accept={Object.keys(ACCEPTED_FILE_TYPES).join(',')}
                     />
                     <button
                       type="button"
                       onClick={handleUploadClick}
-                      style={{
-                        background: "#23262F",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 8,
-                        padding: "12px 32px",
-                        fontWeight: 600,
-                        fontSize: 16,
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.background = "#2C2F36"}
-                      onMouseOut={(e) => e.currentTarget.style.background = "#23262F"}
+                      className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors inline-flex items-center gap-2"
                     >
                       <FontAwesomeIcon icon={faUpload} />
                       Upload File
                     </button>
                   </>
-                )}
-                {file && (
-                  <div style={{ textAlign: "left" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <FontAwesomeIcon icon={getFileIcon()} style={{ color: "#3ED2B0", fontSize: 24 }} />
+                ) : (
+                  <div className="text-left">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <FontAwesomeIcon icon={getFileIcon()} className="text-2xl text-green-500" />
                         <div>
-                          <div style={{ fontWeight: 600, marginBottom: 4 }}>{file.name}</div>
-                          <div style={{ color: "#B0B3B8", fontSize: 14 }}>{formatFileSize(file.size)}</div>
+                          <div className="font-semibold mb-1">{file.name}</div>
+                          <div className="text-gray-500 dark:text-gray-400 text-sm">
+                            {formatFileSize(file.size)}
+                          </div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={clearFile}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#B0B3B8",
-                          cursor: "pointer",
-                          padding: 8,
-                          borderRadius: "50%",
-                          transition: "all 0.3s ease"
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-                        onMouseOut={(e) => e.currentTarget.style.background = "none"}
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
                       >
                         <FontAwesomeIcon icon={faTimes} />
                       </button>
                     </div>
+                    
                     {isUploading && (
-                      <div style={{ marginBottom: 16 }}>
-                        <div style={{ 
-                          height: 4, 
-                          background: "#23262F", 
-                          borderRadius: 2,
-                          overflow: "hidden"
-                        }}>
-                          <div style={{
-                            height: "100%",
-                            width: `${uploadProgress}%`,
-                            background: "#3ED2B0",
-                            transition: "width 0.3s ease"
-                          }} />
+                      <div className="mb-4">
+                        <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-green-500 transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
                         </div>
-                        <div style={{ 
-                          display: "flex", 
-                          alignItems: "center", 
-                          justifyContent: "space-between",
-                          marginTop: 8,
-                          fontSize: 14,
-                          color: "#B0B3B8"
-                        }}>
+                        <div className="flex items-center justify-between mt-2 text-sm text-gray-500 dark:text-gray-400">
                           <span>Uploading... {uploadProgress}%</span>
                           <FontAwesomeIcon icon={faSpinner} spin />
                         </div>
                       </div>
                     )}
-                    {previewUrl && (
-                      <div style={{ 
-                        marginTop: 16, 
-                        borderRadius: 8, 
-                        overflow: "hidden",
-                        maxHeight: 200,
-                        background: "#23262F"
-                      }}>
-                        {file.type.startsWith('image/') ? (
-                          <img 
-                            src={previewUrl} 
-                            alt="Preview" 
-                            style={{ 
-                              width: "100%", 
-                              height: "auto",
-                              objectFit: "contain"
-                            }} 
-                          />
-                        ) : file.type.startsWith('video/') && (
-                          <video 
-                            src={previewUrl} 
-                            controls 
-                            style={{ 
-                              width: "100%", 
-                              maxHeight: 200,
-                              objectFit: "contain"
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {fileError && (
-                  <div style={{ 
-                    marginTop: 16, 
-                    padding: 12, 
-                    background: "rgba(255, 107, 107, 0.1)", 
-                    borderRadius: 8,
-                    color: "#FF6B6B",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8
-                  }}>
-                    <FontAwesomeIcon icon={faExclamationTriangle} />
-                    {fileError}
                   </div>
                 )}
               </div>
             </>
           )}
-          <div style={{ marginBottom: 32 }}>
-            <label style={{ fontWeight: 600, marginBottom: 8, display: "block" }}>Tags</label>
+
+          <div className="mb-8">
+            <label className="block font-semibold mb-2">Tags</label>
             <input
               type="text"
               value={tags}
               onChange={e => setTags(e.target.value)}
               placeholder="Enter tags for process (comma-separated)"
-              style={{ width: "100%", padding: 16, borderRadius: 8, border: "none", background: "#23262F", color: "#fff", fontSize: 16 }}
+              className="w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
           <button
             type="submit"
-            style={{
-              background: "#23262F",
-              color: "#fff",
-              border: "none",
-              borderRadius: 16,
-              padding: "14px 40px",
-              fontWeight: 700,
-              fontSize: 18,
-              cursor: "pointer",
-              transition: "background 0.3s ease"
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = "#2C2F36"}
-            onMouseOut={(e) => e.currentTarget.style.background = "#23262F"}
+            className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white px-10 py-3.5 rounded-xl font-bold text-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           >
             Create Process
           </button>

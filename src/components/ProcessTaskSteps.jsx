@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Modal } from "./Modal";
 import {
   faUser,
   faSearch,
@@ -135,33 +136,6 @@ const processData = {
   ]
 };
 
-function Modal({ open, onClose, steps, taskName }) {
-  if (!open) return null;
-  return (
-    <div style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(0,0,0,0.5)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000
-    }}>
-      <div style={{ background: "#23262F", color: "#fff", borderRadius: 12, padding: 32, minWidth: 350, maxWidth: 500 }}>
-        <h2 style={{ marginBottom: 16 }}>{taskName} - Steps</h2>
-        <ol style={{ marginBottom: 24 }}>
-          {steps.map((step, idx) => (
-            <li key={idx} style={{ marginBottom: 8 }}>{step}</li>
-          ))}
-        </ol>
-        <button onClick={onClose} style={{ background: "#E6E8EB", color: "#181A20", border: "none", borderRadius: 8, padding: "8px 24px", fontWeight: 600, fontSize: 16, cursor: "pointer" }}>Close</button>
-      </div>
-    </div>
-  );
-}
 
 function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMerge, onSplit, tasks }) {
   if (!open) return null;
@@ -181,35 +155,40 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
         <button 
           onClick={() => setEditMode('basic')} 
-          style={{...buttonStyle, background: editMode === 'basic' ? '#3ED2B0' : '#E6E8EB'}}
+          style={{...buttonStyle}}
+          className={ editMode === 'basic' ? 'bg-teal-400' : 'bg-gray-200 dark:bg-gray-900' }
         >
           <FontAwesomeIcon icon={faEdit} style={{ marginRight: '8px' }} />
           Edit Task Details
         </button>
         <button 
           onClick={() => setEditMode('steps')} 
-          style={{...buttonStyle, background: editMode === 'steps' ? '#3ED2B0' : '#E6E8EB'}}
+          style={{...buttonStyle}}
+          className={ editMode === 'steps' ? 'bg-teal-400' : 'bg-gray-200 dark:bg-gray-900' }
         >
           <FontAwesomeIcon icon={faClipboardList} style={{ marginRight: '8px' }} />
           Edit Steps
         </button>
         <button 
           onClick={() => setEditMode('reorder')} 
-          style={{...buttonStyle, background: editMode === 'reorder' ? '#3ED2B0' : '#E6E8EB'}}
+          style={{...buttonStyle}}
+          className={ editMode === 'reorder' ? 'bg-teal-400' : 'bg-gray-200 dark:bg-gray-900' }
         >
           <FontAwesomeIcon icon={faArrowUp} style={{ marginRight: '8px' }} />
           Reorder Tasks
         </button>
         <button 
           onClick={() => setEditMode('merge')} 
-          style={{...buttonStyle, background: editMode === 'merge' ? '#3ED2B0' : '#E6E8EB'}}
+          style={{...buttonStyle}}
+          className={ editMode === 'merge' ? 'bg-teal-400' : 'bg-gray-200 dark:bg-gray-900' }
         >
           <FontAwesomeIcon icon={faCodeMerge} style={{ marginRight: '8px' }} />
           Merge with Another Task
         </button>
         <button 
           onClick={() => setEditMode('split')} 
-          style={{...buttonStyle, background: editMode === 'split' ? '#3ED2B0' : '#E6E8EB'}}
+          style={{...buttonStyle}}
+          className={ editMode === 'split' ? 'bg-teal-400' : 'bg-gray-200 dark:bg-gray-900' }
         >
           <FontAwesomeIcon icon={faArrowsSplitUpAndLeft} style={{ marginRight: '8px' }} />
           Split Task
@@ -231,7 +210,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         <label style={{ display: 'block', marginBottom: '4px' }}>Task Name</label>
         <input
           type="text"
-          value={editedTask.task_name}
+          className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"          value={editedTask.task_name}
           onChange={(e) => setEditedTask({...editedTask, task_name: e.target.value})}
           style={inputStyle}
         />
@@ -240,6 +219,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         <label style={{ display: 'block', marginBottom: '4px' }}>Task Description</label>
         <textarea
           value={editedTask.task_description}
+          className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
           onChange={(e) => setEditedTask({...editedTask, task_description: e.target.value})}
           style={{...inputStyle, minHeight: '100px'}}
         />
@@ -248,6 +228,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         <label style={{ display: 'block', marginBottom: '4px' }}>Task Icon</label>
         <select
           value={editedTask.task_number}
+          className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
           onChange={(e) => setEditedTask({...editedTask, task_number: parseInt(e.target.value)})}
           style={inputStyle}
         >
@@ -274,6 +255,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
               setEditedTask({...editedTask, steps: newSteps});
             }}
             style={inputStyle}
+            className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
           />
           <button
             onClick={() => {
@@ -300,13 +282,14 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
 
   const renderMergeOptions = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div style={{ color: '#B0B3B8', marginBottom: '8px' }}>
+      <div style={{ marginBottom: '8px' }}>
         Select a task to merge with the current task. The steps from both tasks will be combined.
       </div>
       <select 
         value={mergeTargetTask} 
         onChange={(e) => setMergeTargetTask(e.target.value)}
         style={inputStyle}
+        className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
       >
         <option value="">Select task to merge with...</option>
         {tasks
@@ -324,6 +307,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
           }
         }} 
         style={{...buttonStyle, opacity: mergeTargetTask ? 1 : 0.5}}
+        className="dark:bg-gray-800 bg-gray-300"
         disabled={!mergeTargetTask}
       >
         Merge Tasks
@@ -333,7 +317,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
 
   const renderSplitOptions = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div style={{ color: '#B0B3B8', marginBottom: '8px' }}>
+      <div style={{  marginBottom: '8px' }}>
         Choose the step number where you want to split this task. The task will be divided into two separate tasks.
       </div>
       <input
@@ -343,8 +327,9 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         value={splitStepNumber}
         onChange={(e) => setSplitStepNumber(Math.min(Math.max(1, parseInt(e.target.value) || 1), editedTask.steps.length))}
         style={inputStyle}
+        className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
       />
-      <div style={{ color: '#B0B3B8', fontSize: '14px' }}>
+      <div style={{  fontSize: '14px' }}>
         Current task will be split into:
         <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
           <li>Task 1: Steps 1 to {splitStepNumber}</li>
@@ -354,6 +339,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
       <button 
         onClick={() => onSplit(task.task_number, splitStepNumber)} 
         style={buttonStyle}
+        className="dark:bg-gray-800 bg-gray-300"
       >
         Split Task
       </button>
@@ -368,31 +354,29 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
       width: 540,
       maxHeight: 'calc(100vh - 64px)',
       height: 'calc(100vh - 64px)',
-      background: "rgba(0,0,0,0.5)",
       display: "flex",
       alignItems: "flex-end",
       justifyContent: "flex-end",
       zIndex: 1000
     }}>
-      <div style={{ background: "#23262F", color: "#fff", borderRadius: 12, padding: 32, minWidth: 500, maxWidth: 600, height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)', overflow: 'auto', marginRight: 0 }}>
+      <div className="bg-gray-100 text-black dark:bg-gray-800 dark:text-white" style={{borderRadius: 12, padding: 32, minWidth: 500, maxWidth: 600, height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)', overflow: 'auto', marginRight: 0 }}>
         <h2 style={{ marginBottom: 16 }}>Edit Task: {task.task_name}</h2>
         
         {renderEditOptions()}
         
-        <div style={{ 
-          background: '#181A20', 
+        <div style={{  
           borderRadius: 8, 
           padding: 20, 
           marginTop: 20 
-        }}>
+        }} className="bg-gray-200 text-black dark:bg-gray-900 dark:text-white">
           {editMode === 'basic' && renderBasicEdit()}
           {editMode === 'steps' && renderStepsEdit()}
           {editMode === 'reorder' && (
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <button onClick={() => onReorder(task.task_number, 'up')} style={buttonStyle}>
+              <button onClick={() => onReorder(task.task_number, 'up')} style={buttonStyle} className="dark:bg-gray-800 bg-gray-300">
                 <FontAwesomeIcon icon={faArrowUp} style={{ marginRight: '8px' }} /> Move Up
               </button>
-              <button onClick={() => onReorder(task.task_number, 'down')} style={buttonStyle}>
+              <button onClick={() => onReorder(task.task_number, 'down')} style={buttonStyle} className="dark:bg-gray-800 bg-gray-300">
                 <FontAwesomeIcon icon={faArrowDown} style={{ marginRight: '8px' }} /> Move Down
               </button>
             </div>
@@ -402,19 +386,17 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         </div>
 
         <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{...buttonStyle, background: '#23262F'}}>Cancel</button>
+          <button onClick={onClose} style={{...buttonStyle}} className="dark:bg-gray-900 bg-gray-300">Cancel</button>
           {editMode === 'basic' && (
-            <button onClick={handleSave} style={{...buttonStyle, background: '#3ED2B0'}}>Save Changes</button>
+            <button onClick={handleSave} style={{...buttonStyle, background: '#3ED2B0'}} className="">Save Changes</button>
           )}
         </div>
       </div>
     </div>
   );
-}
+};
 
 const buttonStyle = {
-  background: '#E6E8EB',
-  color: '#181A20',
   border: 'none',
   borderRadius: 8,
   padding: '8px 16px',
@@ -429,8 +411,6 @@ const inputStyle = {
   padding: '8px 12px',
   borderRadius: 8,
   border: '1px solid #35373B',
-  background: '#23262F',
-  color: '#fff',
   fontSize: 14
 };
 
@@ -528,72 +508,82 @@ export default function ProcessTaskSteps() {
   };
 
   return (
-    <div style={{ background: "#181A20", color: "#fff", minHeight: "100vh", fontFamily: "Inter, sans-serif", padding: 40 }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>{processData.process_title}
-          <span style={{ background: "#3A2F18", color: "#F6C768", fontSize: 16, fontWeight: 600, borderRadius: 8, padding: "4px 12px", marginLeft: 16, verticalAlign: "middle" }}>IN REVIEW</span>
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white px-8 py-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">
+          {processData.process_title}
+          <span className="bg-yellow-600 text-yellow-100 text-sm font-semibold rounded-md px-3 py-1 ml-4 align-middle">
+            IN REVIEW
+          </span>
         </h1>
-        <div style={{ color: "#B0B3B8", fontSize: 16, marginBottom: 32 }}>{processData.video_analysis_summary}</div>
-        <h2 style={{ fontSize: 24, fontWeight: 600, margin: "32px 0 16px" }}>Process Tasks</h2>
+        <div className="text-gray-500 dark:text-gray-300 text-base mb-8">
+          {processData.video_analysis_summary}
+        </div>
+        
+        <h2 className="text-2xl font-semibold mb-4">Process Tasks</h2>
+        
         {showReorderMsg && (
-          <div style={{
-            background: '#23262F',
-            color: '#3ED2B0',
-            border: '1px solid #3ED2B0',
-            borderRadius: 8,
-            padding: '10px 20px',
-            marginBottom: 16,
-            fontWeight: 600,
-            fontSize: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            boxShadow: '0 2px 8px 0 #3ED2B055',
-            justifyContent: 'center',
-          }}>
+          <div className="bg-gray-100 dark:bg-gray-800 text-green-500 border border-green-500 rounded-lg p-4 mb-4 font-semibold flex items-center justify-center gap-2 shadow-md">
             ✔️ Task moved! Highlighted below.
           </div>
         )}
-        <div style={{ borderLeft: "2px solid #35373B", marginLeft: 16, paddingLeft: 25 }}>
+        
+        <div className="border-l-2 border-gray-200 dark:border-gray-700 ml-4 pl-6">
           {tasks.map((task, idx) => (
-            <div key={task.task_number}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                marginBottom: 36,
-                position: "relative",
-                transition: 'box-shadow 0.4s, background 0.4s',
-                boxShadow: reorderedTask === task.task_number ? '0 0 0 4px #3ED2B0, 0 2px 16px #23262F' : undefined,
-                background: reorderedTask === task.task_number ? '#23262F' : undefined,
-                color: reorderedTask === task.task_number ? '#3ED2B0' : undefined,
-                borderRadius: reorderedTask === task.task_number ? 12 : undefined,
-                animation: reorderedTask === task.task_number ? 'slideIn 0.4s' : undefined
-              }}
+            <div
+              key={task.task_number}
+              className={`flex items-start mb-8 relative transition-all duration-300 ${
+                reorderedTask === task.task_number
+                  ? 'bg-gray-100 dark:bg-gray-800 text-green-500 rounded-xl shadow-lg animate-slideIn'
+                  : ''
+              }`}
             >
-              <div style={{ position: "absolute", left: -38, top: 0, fontSize: 28, color: "#B0B3B8" }}>
+              <div className="absolute -left-10 top-0 text-2xl text-gray-400">
                 <FontAwesomeIcon icon={taskIconMap[task.task_number]} />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 2 }}>{task.task_name}</div>
-                <div style={{ color: "#B0B3B8", fontSize: 15, marginBottom: 2 }}>{task.task_description}</div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button onClick={() => openModal(task.steps, task.task_name)} style={{ background: "none", color: "#3ED2B0", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                    <FontAwesomeIcon icon={faClipboardList} style={{ color: "#3ED2B0" }} /> VIEW STEPS
+              
+              <div className="flex-1">
+                <div className="font-bold text-lg mb-1">{task.task_name}</div>
+                <div className="text-gray-500 dark:text-gray-300 text-sm mb-2">
+                  {task.task_description}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => openModal(task.steps, task.task_name)}
+                    className="text-green-500 hover:text-green-600 font-semibold text-sm flex items-center gap-1.5"
+                  >
+                    <FontAwesomeIcon icon={faClipboardList} />
+                    VIEW STEPS
                   </button>
-                  <button onClick={() => handleEditTask(task)} style={{ background: "none", color: "#E6E8EB", border: "none", fontWeight: 600, fontSize: 15, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-                    <FontAwesomeIcon icon={faEdit} style={{ color: "#E6E8EB" }} /> EDIT
+                  <button
+                    onClick={() => handleEditTask(task)}
+                    className="text-gray-400 hover:text-white font-semibold text-sm flex items-center gap-1.5"
+                  >
+                    <FontAwesomeIcon icon={faEdit} />
+                    EDIT
                   </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <div style={{ textAlign: "right", marginTop: 40, display: "flex", gap: 16, justifyContent: "flex-end" }}>
-          <button style={{ background: "#23262F", color: "#fff", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Regenerate</button>
-          <button style={{ background: "#23262F", color: "#fff", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Edit Tasks</button>
-          <button onClick={() => navigate(`/`)} style={{ background: "#E6E8EB", color: "#181A20", border: "none", borderRadius: 16, padding: "12px 32px", fontWeight: 600, fontSize: 18, cursor: "pointer" }}>Approve</button>
+        
+        <div className="flex justify-end gap-4 mt-10">
+          <button className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl px-8 py-3 font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            Regenerate
+          </button>
+          <button className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl px-8 py-3 font-semibold text-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            Edit Tasks
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-8 py-3 font-semibold text-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            Approve
+          </button>
         </div>
       </div>
+
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} steps={modalSteps} taskName={modalTaskName} />
       <EditTaskModal
         open={editModalOpen}
@@ -606,10 +596,14 @@ export default function ProcessTaskSteps() {
         onSplit={handleSplitTask}
         tasks={tasks}
       />
-      <style>{`
+
+      <style jsx>{`
         @keyframes slideIn {
           from { transform: translateY(20px); opacity: 0.5; }
           to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slideIn {
+          animation: slideIn 0.4s ease-out;
         }
       `}</style>
     </div>

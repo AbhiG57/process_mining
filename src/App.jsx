@@ -12,9 +12,9 @@ import CreateProcess from './components/CreateProcess'
 import { height } from '@fortawesome/free-brands-svg-icons/fa42Group'
 
 function App() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState('dark');
   const toggleTheme = () => {
-    if(theme==='dark'){
+    if(theme==='light'){
     document.getElementsByTagName('body')[0].classList.add('dark');
   }else{
     document.getElementsByTagName('body')[0].classList.remove('dark');
@@ -29,10 +29,6 @@ function App() {
      <div style={{height: '90vh'}}>
       <Routes>
         <Route path='/' element={<WorkflowBuilder />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/process" element={<ProcessListing />} />
-        <Route path="/process/:id" element={<ProcessTaskSteps />} />
-        <Route path="/createProcess" element={<CreateProcess/>}/><Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<ProcessListing />} />
         <Route path="/process/:id" element={<ProcessTaskSteps />} />
