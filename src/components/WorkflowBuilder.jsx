@@ -104,17 +104,17 @@ function LabelEditModal({ open, label, onSave, onClose, placeholder }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-slate-800 p-6 rounded shadow-lg min-w-[320px]">
-        <div className="mb-3 text-slate-200 font-semibold">{placeholder}</div>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg min-w-[320px]">
+        <div className="mb-3 text-gray-900 dark:text-gray-100 font-semibold">{placeholder}</div>
         <input
-          className="w-full p-2 rounded bg-slate-900 border border-slate-600 text-slate-100 mb-4"
+          className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 mb-4"
           value={value}
           onChange={e => setValue(e.target.value)}
           autoFocus
         />
         <div className="flex gap-2 justify-end">
-          <button className="px-3 py-1 rounded bg-slate-700 text-slate-200" onClick={onClose}>Cancel</button>
-          <button className="px-3 py-1 rounded bg-blue-600 text-white" onClick={() => onSave(value)}>Save</button>
+          <button className="px-3 py-1 rounded bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600" onClick={onClose}>Cancel</button>
+          <button className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700" onClick={() => onSave(value)}>Save</button>
         </div>
       </div>
     </div>
@@ -308,7 +308,7 @@ export default function WorkflowBuilder() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-950">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
       <div className="md:block">
         <Sidebar
@@ -331,14 +331,14 @@ export default function WorkflowBuilder() {
           panOnDrag
           zoomOnScroll
           panOnScroll
-          className="bg-slate-950"
+          className="bg-gray-100 dark:bg-gray-900"
           onNodeDragStop={onNodeDragStop}
           onDrop={onDrop}
           onDragOver={onDragOver}
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
         >
-          <Background color="#334155" gap={32} />
+          <Background color="#94a3b8" gap={32} />
           <Controls showInteractive={false} />
           {/* Edge selection highlight */}
           {selectedEdge && (

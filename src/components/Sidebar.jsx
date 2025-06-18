@@ -3,29 +3,29 @@ import { faLayerGroup, faCodeBranch, faExclamationCircle } from '@fortawesome/fr
 
 export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHandler }) {
   return (
-    <div className="w-60 bg-slate-900 border-r border-slate-800 p-3 flex flex-col gap-5 h-full">
+    <div className="w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-3 flex flex-col gap-5 h-full">
       <div>
-        <div className="text-slate-400 font-semibold mb-1 text-xs">Process Elements</div>
+        <div className="text-gray-600 dark:text-gray-300 font-semibold mb-1 text-xs">Process Elements</div>
         <div className="flex flex-col gap-2">
           <button
-            className="flex items-center gap-2 p-2 rounded bg-slate-800 text-xs text-slate-100 hover:bg-blue-900 transition"
+            className="flex items-center gap-2 p-2 rounded bg-gray-100 dark:bg-gray-700 text-xs text-gray-900 dark:text-gray-100 hover:bg-blue-100 dark:hover:bg-blue-900 transition"
             onClick={onAddStage}
           >
-            <FontAwesomeIcon icon={faLayerGroup} className="text-blue-400 text-base" />
+            <FontAwesomeIcon icon={faLayerGroup} className="text-blue-500 dark:text-blue-400 text-base" />
             Stage
           </button>
           <button
-            className="flex items-center gap-2 p-2 rounded bg-slate-800 text-xs text-slate-100 hover:bg-cyan-900 transition"
+            className="flex items-center gap-2 p-2 rounded bg-gray-100 dark:bg-gray-700 text-xs text-gray-900 dark:text-gray-100 hover:bg-cyan-100 dark:hover:bg-cyan-900 transition"
             onClick={onAddIfElse}
           >
-            <FontAwesomeIcon icon={faCodeBranch} className="text-cyan-400 text-base" />
+            <FontAwesomeIcon icon={faCodeBranch} className="text-cyan-500 dark:text-cyan-400 text-base" />
             If/Else
           </button>
           <button
-            className="flex items-center gap-2 p-2 rounded bg-slate-800 text-xs text-slate-100 hover:bg-red-900 transition"
+            className="flex items-center gap-2 p-2 rounded bg-gray-100 dark:bg-gray-700 text-xs text-gray-900 dark:text-gray-100 hover:bg-red-100 dark:hover:bg-red-900 transition"
             onClick={onAddErrorHandler}
           >
-            <FontAwesomeIcon icon={faExclamationCircle} className="text-red-400 text-base" />
+            <FontAwesomeIcon icon={faExclamationCircle} className="text-red-500 dark:text-red-400 text-base" />
             Error Handler
           </button>
         </div>
@@ -36,14 +36,14 @@ export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHand
           {tasks.map((task) => (
             <div
               key={task.id}
-              className="rounded bg-slate-700 border border-slate-500 shadow p-2 cursor-move text-xs"
+              className="rounded dark:bg-slate-700 border dark:border-slate-500 shadow p-2 cursor-move text-xs bg-slate-100 border-slate-300"
               draggable
               onDragStart={e => {
                 e.dataTransfer.setData('application/reactflow', JSON.stringify(task));
                 e.dataTransfer.effectAllowed = 'move';
               }}
             >
-              <div className="font-semibold text-slate-100 text-xs">{task.label}</div>
+              <div className="font-semibold dark:text-slate-100 text-xs text-black">{task.label}</div>
               <div className="text-[10px] text-slate-400">{task.department}</div>
             </div>
           ))}
