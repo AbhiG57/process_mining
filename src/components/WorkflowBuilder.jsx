@@ -14,6 +14,7 @@ import TaskCardNode from './nodes/TaskCardNode';
 import IfElseNode from './nodes/IfElseNode';
 import ErrorHandlerNode from './nodes/ErrorHandlerNode';
 import Sidebar from './Sidebar';
+import AnimatedDottedEdge from './AnimatedDottedEdge';
 
 // Utility functions for localStorage persistence
 const STORAGE_KEY = 'workflow-builder-state';
@@ -56,6 +57,10 @@ const nodeTypes = {
   taskCard: TaskCardNode,
   ifElse: IfElseNode,
   errorHandler: ErrorHandlerNode,
+};
+
+const edgeTypes = {
+  'animated-dotted': AnimatedDottedEdge,
 };
 
 const initialSidebarTasks = [
@@ -162,6 +167,11 @@ export default function WorkflowBuilder() {
   const savedState = loadFromLocalStorage();
   const initialNodes = savedState?.nodes || initialNodesBase;
   const initialEdges = savedState?.edges || initialEdgesBase;
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const onInit = (instance) => {
+    console.log('React Flow Ready:', instance);
+    setReactFlowInstance(instance);
+  };
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -287,11 +297,15 @@ export default function WorkflowBuilder() {
       const data = event.dataTransfer.getData('application/reactflow');
       if (!data) return;
       const task = JSON.parse(data);
-      
+      const { x: flowX, y: flowY } = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
       // Calculate position relative to canvas
       const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+        x: flowX,
+        y: flowY,
       };
 
       // Create new task node
@@ -307,7 +321,7 @@ export default function WorkflowBuilder() {
       setNodes((nds) => nds.concat(newNode));
       setSidebarTasks((tasks) => tasks.filter(t => t.id !== task.id));
     },
-    [setNodes]
+    [setNodes, reactFlowInstance]
   );
 
   const onDragOver = useCallback((event) => {
@@ -331,6 +345,9 @@ export default function WorkflowBuilder() {
     }
     return node;
   });
+
+  // Set all edges to use the custom animated-dotted edge type
+  const edgesWithType = edges.map(edge => ({ ...edge, type: 'animated-dotted' }));
 
   const handleAddIfElse = () => {
     const newId = `ifelse-${Date.now()}`;
@@ -402,11 +419,12 @@ export default function WorkflowBuilder() {
       <div className="w-full h-full relative" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodesWithHandlers}
-          edges={edges}
+          edges={edgesWithType}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           panOnDrag
           zoomOnScroll
@@ -417,6 +435,7 @@ export default function WorkflowBuilder() {
           onDragOver={onDragOver}
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
+          onInit={onInit}
         >
           <Background color="#94a3b8" gap={32} />
           <Controls showInteractive={false} />
