@@ -36,15 +36,19 @@ export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHand
           {tasks.map((task) => (
             <div
               key={task.id}
-              className="rounded dark:bg-slate-700 border dark:border-slate-500 shadow p-2 cursor-move text-xs bg-slate-100 border-slate-300"
+              className="rounded bg-slate-700 border border-slate-500 shadow p-2 cursor-grab text-xs transition-transform duration-150 hover:scale-105 hover:bg-slate-600 relative group"
               draggable
               onDragStart={e => {
                 e.dataTransfer.setData('application/reactflow', JSON.stringify(task));
                 e.dataTransfer.effectAllowed = 'move';
               }}
             >
-              <div className="font-semibold dark:text-slate-100 text-xs text-black">{task.label}</div>
+              <div className="font-semibold text-slate-100 text-xs">{task.label}</div>
               <div className="text-[10px] text-slate-400">{task.department}</div>
+              {/* Tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 -top-7 bg-gray-900 text-white text-[11px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-20 shadow">
+                Drag to canvas
+              </div>
             </div>
           ))}
         </div>

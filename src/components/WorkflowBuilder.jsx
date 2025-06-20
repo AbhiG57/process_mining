@@ -188,6 +188,9 @@ export default function WorkflowBuilder() {
   const [labelEdit, setLabelEdit] = useState({ open: false, nodeId: null, type: '', placeholder: '', label: '' });
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [showEdgeDeleteHelp, setShowEdgeDeleteHelp] = useState(false);
+  // Animation state for new nodes
+  const [newStageId, setNewStageId] = useState(null);
+  const [newTaskId, setNewTaskId] = useState(null);
 
   // Save to localStorage whenever nodes or edges change
   useEffect(() => {
@@ -301,14 +304,10 @@ export default function WorkflowBuilder() {
         x: event.clientX,
         y: event.clientY,
       });
-
-      // Calculate position relative to canvas
       const position = {
         x: flowX,
         y: flowY,
       };
-
-      // Create new task node
       const newNode = {
         id: task.id,
         type: 'taskCard',
@@ -316,10 +315,12 @@ export default function WorkflowBuilder() {
         data: { label: task.label, department: task.department },
         draggable: true,
       };
-
-      // Update nodes and sidebar tasks
       setNodes((nds) => nds.concat(newNode));
       setSidebarTasks((tasks) => tasks.filter(t => t.id !== task.id));
+      setNewTaskId(task.id);
+      setTimeout(() => setNewTaskId(null), 400);
+      // Call handleDragStop for sidebar drop
+      handleDragStop(event, newNode);
     },
     [setNodes, reactFlowInstance]
   );
@@ -331,11 +332,14 @@ export default function WorkflowBuilder() {
 
   // Pass delete handlers to node data
   const nodesWithHandlers = nodes.map((node) => {
+    let extra = {};
+    if (node.type === 'stage' && node.id === newStageId) extra.isNewStage = true;
+    if (node.type === 'taskCard' && node.id === newTaskId) extra.isNewTask = true;
     if (node.type === 'stage') {
-      return { ...node, data: { ...node.data, onDelete: () => handleDeleteStage(node.id) } };
+      return { ...node, data: { ...node.data, ...extra, onDelete: () => handleDeleteStage(node.id) } };
     }
     if (node.type === 'taskCard') {
-      return { ...node, data: { ...node.data, onDelete: () => handleDeleteTaskCard(node.id) } };
+      return { ...node, data: { ...node.data, ...extra, onDelete: () => handleDeleteTaskCard(node.id) } };
     }
     if (node.type === 'ifElse') {
       return { ...node, data: { ...node.data, onDelete: () => setNodes(nds => nds.filter(n => n.id !== node.id)) } };
@@ -403,7 +407,140 @@ export default function WorkflowBuilder() {
     setShowEdgeDeleteHelp(false);
   };
 
+  // const handleDragStop = useCallback((event, node) => {
+  //   if (node.type !== 'taskCard') return;
+  
+  //   const getPrevParent = nodes.find(item => item.id === node.parentId);
+  
+  //   const taskCardBox = {
+  //     x: getPrevParent ? node.position.x - getPrevParent.position.x : node.position.x,
+  //     y: getPrevParent ? node.position.y - getPrevParent.position.y : node.position.y,
+  //     width: node.measured ? node.measured.width : 120,
+  //     height: node.measured ? node.measured.height : 80,
+  //   };
+  
+  //   const parentBoxArr = nodes.filter(item => {
+  //     if (item.type === 'stage') {
+  //       const flag = nodeInsideParent(
+  //         taskCardBox,
+  //         item.position,
+  //         item.measured?.height,
+  //         item.measured?.width
+  //       );
+  //       console.log(flag,item);
+  //       if (flag) return item;
+  //     }
+  //     return false;
+  //   });
+  
+  //   setNodes(prevNodes =>
+  //     prevNodes.map(n => {
+  //       if (n.id === node.id) {
+  //         if (parentBoxArr[0]) {
+  //           return {
+  //             ...n,
+  //             position: {
+  //               ...n.position,
+  //               x: n.position.x - parentBoxArr[0].position.x,
+  //               y: n.position.y - parentBoxArr[0].position.y,
+  //             },
+  //             parentId: parentBoxArr[0]?.id ?? null,
+  //           };
+  //         } else if (getPrevParent) {
+  //           return {
+  //             ...n,
+  //             position: {
+  //               ...n.position,
+  //               x: n.position.x + getPrevParent.position.x,
+  //               y: n.position.y + getPrevParent.position.y,
+  //             },
+  //             parentId: null,
+  //           };
+  //         } else {
+  //           return {
+  //             ...n,
+  //             parentId: null,
+  //           };
+  //         }
+  //       } else {
+  //         return n;
+  //       }
+  //     })
+  //   );
+  // }, [nodes, setNodes]);
 
+  const handleDragStop = useCallback(
+    (event, node) => {
+      if (node.type !== 'taskCard') return;
+  
+      // 🔑 Work only with the freshest array React hands you
+      setNodes(prevNodes => {
+        // 1️⃣  all look‑ups use prevNodes, NOT `nodes` from closure
+        const getPrevParent = prevNodes.find(item => item.id === node.parentId);
+  
+        const taskCardBox = {
+          x: getPrevParent ? node.position.x - getPrevParent.position.x : node.position.x,
+          y: getPrevParent ? node.position.y - getPrevParent.position.y : node.position.y,
+          width: node.measured?.width ?? 120,
+          height: node.measured?.height ?? 80,
+        };
+  
+        const parentBoxArr = prevNodes.filter(item => {
+          if (item.type !== 'stage') return false;
+          return nodeInsideParent(
+            taskCardBox,
+            item.position,
+            item.measured?.height,
+            item.measured?.width
+          );
+        });
+  
+        // 2️⃣  return the new nodes array
+        return prevNodes.map(n => {
+          if (n.id !== node.id) return n;
+  
+          // — inside‐stage —
+          if (parentBoxArr[0]) {
+            const parent = parentBoxArr[0];
+            return {
+              ...n,
+              position: {
+                x: n.position.x - parent.position.x,
+                y: n.position.y - parent.position.y,
+              },
+              parentId: parent.id,
+            };
+          }
+  
+          // — dragged out of its old stage —
+          if (getPrevParent) {
+            return {
+              ...n,
+              position: {
+                x: n.position.x + getPrevParent.position.x,
+                y: n.position.y + getPrevParent.position.y,
+              },
+              parentId: null,
+            };
+          }
+  
+          // — no parent, plain move —
+          return { ...n, parentId: null };
+        });
+      });
+    },
+    [setNodes]   // ⬅️  NO `nodes` here; keeps callback stable
+  );
+  
+  function nodeInsideParent(childBox, parentPos, parentHeight, parentWidth) {
+    return (
+      childBox.x >= parentPos.x &&
+      childBox.y >= parentPos.y &&
+      childBox.x + childBox.width <= parentPos.x + parentWidth &&
+      childBox.y + childBox.height <= parentPos.y + parentHeight
+    );
+  }
+  
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
@@ -430,12 +567,20 @@ export default function WorkflowBuilder() {
           zoomOnScroll
           panOnScroll
           className="bg-gray-100 dark:bg-gray-900"
-          onNodeDragStop={handleNodeDragStop}
+          onNodeDragStop={handleDragStop}
           onDrop={onDrop}
           onDragOver={onDragOver}
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
           onInit={onInit}
+          connectionLineType="bezier"
+          connectionLineStyle={{ stroke: '#38bdf8', strokeWidth: 3, strokeDasharray: '6,8', animation: 'dotted-flow 1.2s linear infinite' }}
+          snapToGrid={true}
+          snapGrid={[16, 16]}
+          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+          minZoom={0.2}
+          maxZoom={2}
+          onlyRenderVisibleElements={true}
         >
           <Background color="#94a3b8" gap={32} />
           <Controls showInteractive={false} />
@@ -472,6 +617,36 @@ export default function WorkflowBuilder() {
           placeholder={labelEdit.placeholder}
         />
       )}
+      <style>{`
+        @keyframes pop-in {
+          0% { opacity: 0; transform: scale(0.7); }
+          80% { opacity: 1; transform: scale(1.05); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-pop-in {
+          animation: pop-in 0.3s ease-out;
+        }
+        @keyframes slide-in {
+          0% { opacity: 0; transform: translateY(30px) scale(0.95); box-shadow: 0 0 0 0 #3b82f6; }
+          80% { opacity: 1; transform: translateY(-4px) scale(1.03); box-shadow: 0 0 0 6px #3b82f6; }
+          100% { opacity: 1; transform: translateY(0) scale(1); box-shadow: 0 0 0 0 #3b82f6; }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.4s cubic-bezier(.22,1,.36,1);
+        }
+        .highlight {
+          box-shadow: 0 0 0 3px #3b82f6;
+        }
+        .edge-glow path {
+          stroke: #38bdf8 !important;
+          filter: drop-shadow(0 0 6px #38bdf8);
+          stroke-width: 3 !important;
+        }
+        .node-added {
+          box-shadow: 0 0 0 4px #38bdf8, 0 2px 12px 0 rgba(56,189,248,0.15);
+          transition: box-shadow 0.4s cubic-bezier(.22,1,.36,1);
+        }
+      `}</style>
     </div>
   );
 } 
