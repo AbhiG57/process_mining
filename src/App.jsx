@@ -10,7 +10,8 @@ import ProcessListing from './components/ProcessListing'
 import ProcessTaskSteps from './components/ProcessTaskSteps'
 import CreateProcess from './components/CreateProcess'
 import { height } from '@fortawesome/free-brands-svg-icons/fa42Group'
-
+import Orchestration from './components/Orchestration'
+import TicketFlow from './components/TicketFlow'
 function App() {
   const [theme, setTheme] = useState('dark');
   const toggleTheme = () => {
@@ -33,6 +34,8 @@ function App() {
         <Route path="/process" element={<ProcessListing />} />
         <Route path="/process/:id" element={<ProcessTaskSteps />} />
         <Route path="/createProcess" element={<CreateProcess/>}/>
+        <Route path="/orchestration" element={<Orchestration />} />
+        <Route path="/ticketflow" element={<TicketFlow />} />
       </Routes>
       </div>
       </BrowserRouter>
