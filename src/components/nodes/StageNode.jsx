@@ -10,19 +10,25 @@ export default function StageNode({ data, selected }) {
         (data.isNewStage ? " node-added animate-pop-in" : "")
       }
     >
+      {/* Stage Number Badge */}
+      {typeof data.stageNumber === 'number' && (
+        <div className="absolute -top-2 -left-2 px-2 py-0.5 bg-gray-200 text-black font-bold text-xs rounded shadow border border-gray-300 select-none z-10">
+          Stage {data.stageNumber}
+        </div>
+      )}
       <NodeResizeControl style={{width: '10px', height: '10px',backgroundColor: 'red'}} color="#3b82f6" isVisible={selected} minWidth={120} minHeight={60} />
       <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-blue-500" />
       <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-blue-500" />
       <div className="flex items-center justify-between mb-1">
-        <span className="font-bold text-gray-900 dark:text-gray-100 text-xs flex items-center gap-2">
-          <FontAwesomeIcon icon={faLayerGroup} className="text-blue-500 dark:text-blue-400 text-base" />
+        <span className="font-bold text-slate-900 dark:text-slate-100 text-xs flex items-center gap-2">
+          <FontAwesomeIcon icon={faLayerGroup} className="text-blue-400 text-base" />
           {data.label}
         </span>
-        <button className="text-gray-400 hover:text-red-500 text-base p-1" onClick={data.onDelete}>
+        <button className="text-slate-400 hover:text-red-400 text-base p-1" onClick={data.onDelete}>
           <FontAwesomeIcon icon={faTrash} />
         </button>
       </div>
-      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-900/60 p-1 w-full flex-1">
+      <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded bg-slate-50 dark:bg-slate-900/60 p-1 w-full flex-1">
         {data.children}
       </div>
     </div>

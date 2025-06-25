@@ -87,7 +87,7 @@ const initialNodesBase = [
     id: "stage-1",
     type: "stage",
     position: { x: 100, y: 100 },
-    data: { label: "Customer Onboarding" },
+    data: { label: "Customer Onboarding",stageNumber:1 },
     style: { width: 250, height: 140 },
   },
   {
@@ -111,7 +111,7 @@ const initialNodesBase = [
     id: "stage-2",
     type: "stage",
     position: { x: 600, y: 100 },
-    data: { label: "Explore Products" },
+    data: { label: "Explore Products",stageNumber:2 },
     style: { width: 220, height: 140 },
   },
   {
@@ -228,6 +228,7 @@ export default function WorkflowBuilder() {
   // Animation state for new nodes
   const [newStageId, setNewStageId] = useState(null);
   const [newTaskId, setNewTaskId] = useState(null);
+  const stageNumberRef = useRef(1); // For unique, persistent stage numbers
 
   // Save to localStorage whenever nodes or edges change
   useEffect(() => {
@@ -295,119 +296,29 @@ export default function WorkflowBuilder() {
     [setEdges]
   );
 
-  // Add new Stage node
-  const handleAddStage = () => {
-    const newId = `stage-${stageIdRef.current++}`;
-    setNodes((nds) =>
-      nds.concat({
-        id: newId,
-        type: "stage",
-        position: { x: 200, y: 200 },
-        data: { label: `New Stage` },
-        style: { width: 220, height: 140 },
-      })
-    );
-    setTimeout(
-      () =>
-        setLabelEdit({
-          open: true,
-          nodeId: newId,
-          type: "stage",
-          placeholder: "Rename this Stage",
-          label: "",
-        }),
-      0
-    );
-  };
-
-  // Delete Stage and its children
-  const handleDeleteStage = (stageId) => {
-    setNodes((nds) =>
-      nds.filter((n) => n.id !== stageId && n.parentNode !== stageId)
-    );
-    setEdges((eds) =>
-      eds.filter((e) => e.source !== stageId && e.target !== stageId)
-    );
-  };
-
-  // Delete TaskCard and add back to sidebar
-  const handleDeleteTaskCard = (taskId) => {
-    const taskNode = nodes.find((n) => n.id === taskId);
-    if (taskNode) {
-      // Only add back to sidebar if it's not already there
-      setSidebarTasks((tasks) => {
-        const taskExists = tasks.some((t) => t.id === taskNode.id);
-        if (!taskExists) {
-          return [
-            ...tasks,
-            {
-              id: taskNode.id,
-              label: taskNode.data.label,
-              department: taskNode.data.department,
-            },
-          ];
-        }
-        return tasks;
-      });
-    }
-    setNodes((nds) => nds.filter((n) => n.id !== taskId));
-    setEdges((eds) =>
-      eds.filter((e) => e.source !== taskId && e.target !== taskId)
-    );
-  };
-
-  // Handle drop from sidebar (unassigned tasks)
-  const onDrop = useCallback(
-    (event) => {
-      event.preventDefault();
-      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
-      const data = event.dataTransfer.getData("application/reactflow");
-      if (!data) return;
-      const task = JSON.parse(data);
-      const { x: flowX, y: flowY } = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      });
-      const position = {
-        x: flowX,
-        y: flowY,
-      };
-      const newNode = {
-        id: task.id,
-        type: "taskCard",
-        position,
-        data: { label: task.label, department: task.department },
-        draggable: true,
-      };
-      setNodes((nds) => nds.concat(newNode));
-      setSidebarTasks((tasks) => tasks.filter((t) => t.id !== task.id));
-      setNewTaskId(task.id);
-      setTimeout(() => setNewTaskId(null), 400);
-      // Call handleDragStop for sidebar drop
-      handleDragStop(event, newNode);
-    },
-    [setNodes, reactFlowInstance]
-  );
-
-  const onDragOver = useCallback((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, []);
-
+  
   // Pass delete handlers to node data
-  const nodesWithHandlers = nodes.map((node) => {
+  const nodesWithHandlers = nodes.map((node, idx) => {
     let extra = {};
     if (node.type === "stage" && node.id === newStageId)
       extra.isNewStage = true;
     if (node.type === "taskCard" && node.id === newTaskId)
       extra.isNewTask = true;
     if (node.type === "stage") {
+      // Assign stageNumber if not present
+      let stageNumber = node.data.stageNumber;
+      if (typeof stageNumber !== "number") {
+        // Find the index among all stage nodes (sorted by appearance)
+        const stageNodes = nodes.filter((n) => n.type === "stage");
+        stageNumber = stageNodes.findIndex((n) => n.id === node.id) + 1;
+      }
       return {
         ...node,
         data: {
           ...node.data,
           ...extra,
           onDelete: () => handleDeleteStage(node.id),
+          stageNumber,
         },
       };
     }
@@ -688,6 +599,130 @@ export default function WorkflowBuilder() {
       childBox.y + childBox.height <= parentPos.y + parentHeight
     );
   }
+
+  // Add new Stage node (without useRef, use maxStageNumber + 1)
+  const handleAddStage = () => {
+    const newId = `stage-${Date.now()}`;
+   
+    // Compute the next available stage number
+  const usedStageNumbers = nodes
+  .filter((n) => n.type === "stage" && typeof n.data.stageNumber === "number")
+  .map((n) => n.data.stageNumber);
+  const maxStageNumber = usedStageNumbers.length > 0 ? Math.max(...usedStageNumbers) : 0;
+  const stageNumber = maxStageNumber + 1;
+    setNodes((nds) =>
+      nds.concat({
+        id: newId,
+        type: "stage",
+        position: { x: 200, y: 200 },
+        data: { label: `New Stage`, stageNumber },
+        style: { width: 220, height: 140 },
+      })
+    );
+    setTimeout(
+      () =>
+        setLabelEdit({
+          open: true,
+          nodeId: newId,
+          type: "stage",
+          placeholder: "Rename this Stage",
+          label: "",
+        }),
+      0
+    );
+  };
+
+  // Delete Stage and its children
+  const handleDeleteStage = (stageId) => {
+    setNodes((nds) => {
+      // Remove the stage and its children
+      const filtered = nds.filter((n) => n.id !== stageId && n.parentNode !== stageId);
+      // Get all stage nodes in their current order
+      const stageNodes = filtered.filter((n) => n.type === "stage");
+      // Reassign stage numbers sequentially
+      let nextNumber = 1;
+      const updated = filtered.map((n) => {
+        if (n.type === "stage") {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              stageNumber: nextNumber++,
+            },
+          };
+        }
+        return n;
+      });
+      return updated;
+    });
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== stageId && e.target !== stageId)
+    );
+  };
+
+  // Delete TaskCard and add back to sidebar
+  const handleDeleteTaskCard = (taskId) => {
+    const taskNode = nodes.find((n) => n.id === taskId);
+    if (taskNode) {
+      // Only add back to sidebar if it's not already there
+      setSidebarTasks((tasks) => {
+        const taskExists = tasks.some((t) => t.id === taskNode.id);
+        if (!taskExists) {
+          return [
+            ...tasks,
+            {
+              id: taskNode.id,
+              label: taskNode.data.label,
+              department: taskNode.data.department,
+            },
+          ];
+        }
+        return tasks;
+      });
+    }
+    setNodes((nds) => nds.filter((n) => n.id !== taskId));
+    setEdges((eds) =>
+      eds.filter((e) => e.source !== taskId && e.target !== taskId)
+    );
+  };
+
+  // Handle drop from sidebar (unassigned tasks)
+  const onDrop = useCallback(
+    (event) => {
+      event.preventDefault();
+      const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+      const data = event.dataTransfer.getData("application/reactflow");
+      if (!data) return;
+      const task = JSON.parse(data);
+      const { x: flowX, y: flowY } = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+      const position = {
+        x: flowX,
+        y: flowY,
+      };
+      const newNode = {
+        id: task.id,
+        type: "taskCard",
+        position,
+        data: { label: task.label, department: task.department },
+        draggable: true,
+      };
+      setNodes((nds) => nds.concat(newNode));
+      setSidebarTasks((tasks) => tasks.filter((t) => t.id !== task.id));
+      setNewTaskId(task.id);
+      setTimeout(() => setNewTaskId(null), 400);
+      // Call handleDragStop for sidebar drop
+      handleDragStop(event, newNode);
+    },
+    [setNodes, reactFlowInstance]
+  );
+
+  const onDragOver = useCallback((event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  }, []);
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
