@@ -223,14 +223,21 @@ export default function Dashboard() {
           {summaryCards.map((card, idx) => (
             <div
               key={card.label}
-              className={`rounded-xl border ${card.border} bg-gray-100 dark:bg-gray-800 shadow p-5 flex flex-col gap-2 relative ring-1 ${card.ring}`}
+              className={`group rounded-2xl border ${card.border} bg-gradient-to-br from-gray-50/80 dark:from-gray-800/80 to-gray-200/60 dark:to-gray-900/60 shadow-lg p-5 flex flex-col gap-3 relative ring-1 ${card.ring} transition-all duration-200 hover:scale-[1.03] hover:shadow-2xl hover:ring-2 cursor-pointer`}
+              style={{ minHeight: 120 }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <FontAwesomeIcon icon={card.icon} className="text-xl" />
-                <span className="font-semibold text-lg">{card.value}</span>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-11 h-11 flex items-center justify-center rounded-xl bg-gradient-to-br from-blue-100/60 dark:from-blue-900/40 to-blue-200/40 dark:to-blue-800/30 shadow group-hover:scale-110 transition-transform duration-200">
+                  <FontAwesomeIcon icon={card.icon} className="text-2xl text-blue-500 dark:text-blue-300" />
+                </div>
+                <span className="font-bold text-2xl text-gray-900 dark:text-white tracking-tight drop-shadow-sm">
+                  {card.value}
+                </span>
               </div>
-              <div className="text-xs text-gray-400 font-semibold mb-1">{card.label}</div>
-              <div className={`text-xs font-bold ${card.changeColor}`}>{card.change}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-300 font-semibold mb-1 tracking-wide">
+                {card.label}
+              </div>
+              <div className={`absolute top-4 right-4 text-xs font-bold ${card.changeColor} bg-white/80 dark:bg-gray-900/80 px-2 py-0.5 rounded shadow`}>{card.change}</div>
             </div>
           ))}
         </div>
