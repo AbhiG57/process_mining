@@ -12,6 +12,8 @@ import CreateProcess from './components/CreateProcess'
 import { height } from '@fortawesome/free-brands-svg-icons/fa42Group'
 import Orchestration from './components/Orchestration'
 import TicketFlow from './components/TicketFlow'
+import TicketListing from './components/TicketListing'
+import Dashboard from './components/Dashboard'
 function App() {
   const [theme, setTheme] = useState('dark');
   const toggleTheme = () => {
@@ -29,13 +31,15 @@ function App() {
      <NavBar theme={theme} toggleTheme={toggleTheme} />
      <div style={{height: '90vh'}}>
       <Routes>
-        <Route path='/' element={<WorkflowBuilder />} />
+        <Route path='/' element={<Dashboard/>} />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<ProcessListing />} />
         <Route path="/process/:id" element={<ProcessTaskSteps />} />
         <Route path="/createProcess" element={<CreateProcess/>}/>
-        <Route path="/orchestration" element={<Orchestration />} />
+        <Route path="/orchestration/:id" element={<Orchestration />} />
         <Route path="/ticketflow" element={<TicketFlow />} />
+        <Route path="/ticketlisting" element={<TicketListing />} />
+        <Route path="/workflowbuilder" element={<WorkflowBuilder />} />
       </Routes>
       </div>
       </BrowserRouter>
