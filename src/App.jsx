@@ -14,6 +14,7 @@ import Orchestration from './components/Orchestration'
 import TicketFlow from './components/TicketFlow'
 import TicketListing from './components/TicketListing'
 import Dashboard from './components/Dashboard'
+import Report from './components/Report'
 function App() {
   const [theme, setTheme] = useState('dark');
   const toggleTheme = () => {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/ticketflow" element={<TicketFlow />} />
         <Route path="/ticketlisting" element={<TicketListing />} />
         <Route path="/workflowbuilder" element={<WorkflowBuilder />} />
+        <Route path='/reports' element={<Report/>}/>
       </Routes>
       </div>
       </BrowserRouter>
