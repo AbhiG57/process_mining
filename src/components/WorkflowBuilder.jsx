@@ -87,19 +87,8 @@ const initialNodesBase = [
     id: "stage-1",
     type: "stage",
     position: { x: 100, y: 100 },
-    data: { label: "Customer Onboarding",stageNumber:1 },
+    data: { label: "Customer Onboarding", stageNumber: 1 },
     style: { width: 250, height: 140 },
-  },
-  {
-    id: "8",
-    type: "taskCard",
-    position: { x: 120, y: 160 },
-    data: {
-      label: "Account Login / Creation",
-      department: "Customer Account Creation",
-    },
-    parentNode: "stage-1",
-    draggable: true,
   },
   {
     id: "ifelse-1",
@@ -111,15 +100,24 @@ const initialNodesBase = [
     id: "stage-2",
     type: "stage",
     position: { x: 600, y: 100 },
-    data: { label: "Explore Products",stageNumber:2 },
+    data: { label: "Explore Products", stageNumber: 2 },
     style: { width: 220, height: 140 },
+  },
+  {
+    id: "8",
+    type: "taskCard",
+    position: { x: 120, y: 160 },
+    data: {
+      label: "Account Login / Creation",
+      department: "Customer Account Creation",
+    },
+    draggable: true,
   },
   {
     id: "9",
     type: "taskCard",
     position: { x: 620, y: 160 },
     data: { label: "Product Search", department: "Browse Desired Products." },
-    parentNode: "stage-2",
     draggable: true,
   },
   {
@@ -296,7 +294,6 @@ export default function WorkflowBuilder() {
     [setEdges]
   );
 
-  
   // Pass delete handlers to node data
   const nodesWithHandlers = nodes.map((node, idx) => {
     let extra = {};
@@ -452,81 +449,83 @@ export default function WorkflowBuilder() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedEdge, setEdges]);
 
+  const handleDragStop = useCallback(
+    (event, draggedNode) => {
+      if (draggedNode.type !== "taskCard") return;
+
+      setNodes((prevNodes) => {
+        const oldNode = prevNodes.find((n) => n.id === draggedNode.id);
+        if (!oldNode) return prevNodes;
+
+        const previousParent = prevNodes.find((n) => n.id === oldNode.parentId);
+
+        // STEP 1: Get ABSOLUTE position of the dragged node
+        const absX = previousParent
+          ? oldNode.position.x + previousParent.position.x
+          : oldNode.position.x;
+        const absY = previousParent
+          ? oldNode.position.y + previousParent.position.y
+          : oldNode.position.y;
+
+        const width = oldNode.measured?.width ?? 120;
+        const height = oldNode.measured?.height ?? 80;
+
+        const taskBox = { x: absX, y: absY, width, height };
+
+        // STEP 2: Find the new parent (if any)
+        const newParent = prevNodes.find(
+          (node) =>
+            node.type === "stage" &&
+            nodeInsideParent(
+              taskBox,
+              node.position,
+              node.measured?.height,
+              node.measured?.width
+            )
+        );
+
+        return prevNodes.map((n) => {
+          if (n.id !== draggedNode.id) return n;
+
+          // CASE 1: Moved into a new parent
+          if (newParent && newParent.id !== oldNode.parentId) {
+            return {
+              ...n,
+              parentId: newParent.id,
+              position: {
+                ...n.position,
+                x: absX - newParent.position.x,
+                y: absY - newParent.position.y,
+              },
+            };
+          }
+
+          // CASE 2: Moved out of a parent
+          if (!newParent && oldNode.parentId) {
+            return {
+              ...n,
+              parentId: null,
+              position: {
+                ...n.position,
+                x: absX,
+                y: absY,
+              },
+            };
+          }
+
+          // CASE 3: Still in same parent → preserve as-is
+          return n;
+        });
+      });
+    },
+    [setNodes]
+  );
+
   // Deselect edge on canvas click
   const onPaneClick = () => {
     setSelectedEdge(null);
     setShowEdgeDeleteHelp(false);
   };
-
-  const handleDragStop = useCallback(
-    (event, node) => {
-      if (node.type !== "taskCard") return;
-      setNodes((prevNodes) => {
-        const getPrevParent = prevNodes.find(
-          (item) => item.id === node.parentId
-        );
-
-        const taskCardBox = {
-          x: getPrevParent
-            ? node.position.x - getPrevParent.position.x
-            : node.position.x,
-          y: getPrevParent
-            ? node.position.y - getPrevParent.position.y
-            : node.position.y,
-          width: node.measured ? node.measured.width : 120,
-          height: node.measured ? node.measured.height : 80,
-        };
-
-        const parentBoxArr = prevNodes.filter((item) => {
-          if (item.type === "stage") {
-            const flag = nodeInsideParent(
-              taskCardBox,
-              item.position,
-              item.measured?.height,
-              item.measured?.width
-            );
-            console.log(flag, item);
-            if (flag) return item;
-          }
-          return false;
-        });
-
-        return prevNodes.map((n) => {
-          if (n.id === node.id) {
-            if (parentBoxArr[0]) {
-              return {
-                ...n,
-                position: {
-                  ...n.position,
-                  x: n.position.x - parentBoxArr[0].position.x,
-                  y: n.position.y - parentBoxArr[0].position.y,
-                },
-                parentId: parentBoxArr[0]?.id ?? null,
-              };
-            } else if (getPrevParent) {
-              return {
-                ...n,
-                position: {
-                  ...n.position,
-                  x: n.position.x + getPrevParent.position.x,
-                  y: n.position.y + getPrevParent.position.y,
-                },
-                parentId: null,
-              };
-            } else {
-              return {
-                ...n,
-                parentId: null,
-              };
-            }
-          } else {
-            return n;
-          }
-        });
-      });
-    },
-    [nodes, setNodes]
-  );
 
   /* const handleDragStop = useCallback(
     (event, node) => {
@@ -603,13 +602,16 @@ export default function WorkflowBuilder() {
   // Add new Stage node (without useRef, use maxStageNumber + 1)
   const handleAddStage = () => {
     const newId = `stage-${Date.now()}`;
-   
+
     // Compute the next available stage number
-  const usedStageNumbers = nodes
-  .filter((n) => n.type === "stage" && typeof n.data.stageNumber === "number")
-  .map((n) => n.data.stageNumber);
-  const maxStageNumber = usedStageNumbers.length > 0 ? Math.max(...usedStageNumbers) : 0;
-  const stageNumber = maxStageNumber + 1;
+    const usedStageNumbers = nodes
+      .filter(
+        (n) => n.type === "stage" && typeof n.data.stageNumber === "number"
+      )
+      .map((n) => n.data.stageNumber);
+    const maxStageNumber =
+      usedStageNumbers.length > 0 ? Math.max(...usedStageNumbers) : 0;
+    const stageNumber = maxStageNumber + 1;
     setNodes((nds) =>
       nds.concat({
         id: newId,
@@ -636,7 +638,9 @@ export default function WorkflowBuilder() {
   const handleDeleteStage = (stageId) => {
     setNodes((nds) => {
       // Remove the stage and its children
-      const filtered = nds.filter((n) => n.id !== stageId && n.parentNode !== stageId);
+      const filtered = nds.filter(
+        (n) => n.id !== stageId && n.parentNode !== stageId
+      );
       // Get all stage nodes in their current order
       const stageNodes = filtered.filter((n) => n.type === "stage");
       // Reassign stage numbers sequentially
