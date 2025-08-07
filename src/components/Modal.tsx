@@ -2,7 +2,14 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes } from '@fortawesome/free-solid-svg-icons';
 
-export function Modal({ open, onClose, steps, taskName }) {
+interface ModalProps {
+  open: boolean;
+  onClose: () => void;
+  steps: string[];
+  taskName: string;
+}
+
+export function Modal({ open, onClose, steps, taskName }: ModalProps): JSX.Element | null {
     if (!open) return null;
     return (
       <div style={{
@@ -28,5 +35,4 @@ export function Modal({ open, onClose, steps, taskName }) {
         </div>
       </div>
     );
-  }
-  
+  } 

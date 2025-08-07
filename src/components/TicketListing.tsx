@@ -15,7 +15,34 @@ import {
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
 
-const STATUS_MAP = {
+interface StatusConfig {
+  label: string;
+  color: string;
+  bg: string;
+  text: string;
+  bar: string;
+  icon: any;
+}
+
+interface Ticket {
+  id: string;
+  title: string;
+  workflow: string;
+  assignee: string | null;
+  status: string;
+  created: string;
+  sla: {
+    percent: number;
+    label: string;
+  };
+}
+
+interface StatusTab {
+  key: string;
+  label: string;
+}
+
+const STATUS_MAP: Record<string, StatusConfig> = {
   completed: {
     label: "Completed",
     color: "green",
@@ -58,7 +85,7 @@ const STATUS_MAP = {
   },
 };
 
-const TICKETS = [
+const TICKETS: Ticket[] = [
   {
     id: "4321",
     title: "John Doe Orders",
@@ -97,7 +124,7 @@ const TICKETS = [
   },
 ];
 
-const STATUS_TABS = [
+const STATUS_TABS: StatusTab[] = [
   { key: "all", label: "All" },
   { key: "open", label: "Open" },
   { key: "inprogress", label: "In Progress" },
@@ -105,12 +132,12 @@ const STATUS_TABS = [
   { key: "error", label: "Error" },
 ];
 
-export default function TicketListing() {
+export default function TicketListing(): JSX.Element {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [dateFilter, setDateFilter] = useState("last7");
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState<string>("");
+  const [status, setStatus] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("last7");
+  const [page, setPage] = useState<number>(1);
 
   // Filtered tickets
   const filtered = TICKETS.filter((t) => {

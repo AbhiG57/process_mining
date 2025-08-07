@@ -3,8 +3,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOn, faEdit, faCopy, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 
+interface Process {
+  id: number;
+  created: string;
+  transcription: string;
+  status: string;
+  statusColor: string;
+  title: string;
+  description: string;
+}
+
+interface StatusCard {
+  label: string;
+  value: number;
+}
+
 // Hardcoded default processes
-const defaultProcesses = [
+const defaultProcesses: Process[] = [
   {
     id: 1,
     created: '2024-01-15',
@@ -37,19 +52,19 @@ const defaultProcesses = [
   },
 ];
 
-const statusCards = [
+const statusCards: StatusCard[] = [
   { label: 'Active', value: 12 },
   { label: 'Executing', value: 5 },
   { label: 'Inactive', value: 7 },
 ];
 
-function ProcessListing() {
+function ProcessListing(): JSX.Element {
   const navigate = useNavigate();
-  const [processes, setProcesses] = useState(defaultProcesses);
+  const [processes, setProcesses] = useState<Process[]>(defaultProcesses);
 
   useEffect(() => {
     // Load additional processes from localStorage on component mount
-    const storedProcesses = JSON.parse(localStorage.getItem('processes') || '[]');
+    const storedProcesses: Process[] = JSON.parse(localStorage.getItem('processes') || '[]');
     // Combine default processes with stored processes, avoiding duplicates
     const combinedProcesses = [...defaultProcesses];
     storedProcesses.forEach(storedProcess => {
@@ -60,7 +75,7 @@ function ProcessListing() {
     setProcesses(combinedProcesses);
   }, []);
 
-  const handleDeleteProcess = (processId) => {
+  const handleDeleteProcess = (processId: number): void => {
     // Only allow deletion of non-default processes
     if (defaultProcesses.some(dp => dp.id === processId)) {
       return; // Don't allow deletion of default processes

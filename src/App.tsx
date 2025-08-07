@@ -10,22 +10,23 @@ import ProcessListing from './components/ProcessListing'
 import ProcessTaskSteps from './components/ProcessTaskSteps'
 import CreateProcess from './components/CreateProcess'
 import AddProcess from './components/AddProcess'
-import { height } from '@fortawesome/free-brands-svg-icons/fa42Group'
 import Orchestration from './components/Orchestration'
 import TicketFlow from './components/TicketFlow'
 import TicketListing from './components/TicketListing'
 import Dashboard from './components/Dashboard'
 import Report from './components/Report'
+
 function App() {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  
   const toggleTheme = () => {
-    if(theme==='light'){
-    document.getElementsByTagName('body')[0].classList.add('dark');
-  }else{
-    document.getElementsByTagName('body')[0].classList.remove('dark');
+    if(theme === 'light'){
+      document.getElementsByTagName('body')[0].classList.add('dark');
+    } else {
+      document.getElementsByTagName('body')[0].classList.remove('dark');
+    }
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   }
-  setTheme(theme === 'dark' ? 'light' : 'dark');
-}
 
   return (
     <>
@@ -51,4 +52,4 @@ function App() {
   )
 }
 
-export default App
+export default App 

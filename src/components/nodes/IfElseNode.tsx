@@ -1,6 +1,15 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, NodeProps } from '@xyflow/react';
 
-export default function IfElseNode({ data }) {
+interface IfElseNodeData {
+  label: string;
+  onDelete: () => void;
+}
+
+interface IfElseNodeProps extends NodeProps {
+  data: IfElseNodeData;
+}
+
+export default function IfElseNode({ data }: IfElseNodeProps): JSX.Element {
   return (
     <div className="w-20 h-20 flex items-center justify-center relative text-xs">
       {/* Input handle (left) */}

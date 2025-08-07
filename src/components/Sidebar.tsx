@@ -1,7 +1,20 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLayerGroup, faCodeBranch, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 
-export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHandler }) {
+interface Task {
+  id: string;
+  label: string;
+  department: string;
+}
+
+interface SidebarProps {
+  tasks: Task[];
+  onAddStage: () => void;
+  onAddIfElse: () => void;
+  onAddErrorHandler: () => void;
+}
+
+export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHandler }: SidebarProps): JSX.Element {
   return (
     <div className="w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-3 flex flex-col gap-5 h-full">
       <div>
@@ -38,7 +51,7 @@ export default function Sidebar({ tasks, onAddStage, onAddIfElse, onAddErrorHand
               key={task.id}
               className="rounded bg-slate-700 border border-slate-500 shadow p-2 cursor-grab text-xs transition-transform duration-150 hover:scale-105 hover:bg-slate-600 relative group"
               draggable
-              onDragStart={e => {
+              onDragStart={(e) => {
                 e.dataTransfer.setData('application/reactflow', JSON.stringify(task));
                 e.dataTransfer.effectAllowed = 'move';
               }}

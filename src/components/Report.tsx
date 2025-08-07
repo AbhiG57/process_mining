@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartBar,
@@ -15,18 +15,50 @@ import {
   faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
 
-const TABS = [
+interface Tab {
+  key: string;
+  label: string;
+  icon: any;
+}
+
+interface TimePeriod {
+  key: string;
+  label: string;
+}
+
+interface ProcessTableData {
+  key: string;
+  range: string;
+  total: number;
+  active: number;
+  completed: number;
+  failed: number;
+  avg: number;
+}
+
+interface TicketTableData {
+  key: string;
+  range: string;
+  total: number;
+  open: number;
+  inprogress: number;
+  completed: number;
+  failed: number;
+  avg: number;
+}
+
+const TABS: Tab[] = [
   { key: "process", label: "Process Reports", icon: faChartLine },
   { key: "ticket", label: "Ticket Reports", icon: faTicketAlt },
 ];
 
-const TIME_PERIODS = [
+const TIME_PERIODS: TimePeriod[] = [
   { key: "30d", label: "Last 30 Days" },
   { key: "7d", label: "Last 7 Days" },
   { key: "1d", label: "Yesterday" },
 ];
 
-const TABLE_DATA = [
+const TABLE_DATA: ProcessTableData[] = [
   { key: "30d", range: "Last 30 Days", total: 150, active: 30, completed: 100, failed: 20, avg: 5 },
   { key: "30d", range: "2024-06-01 to 2024-06-15", total: 80, active: 15, completed: 60, failed: 5, avg: 4.9 },
   { key: "30d", range: "2024-05-16 to 2024-05-31", total: 70, active: 15, completed: 40, failed: 15, avg: 5.1 },
@@ -39,7 +71,7 @@ const TABLE_DATA = [
 ];
 
 // Ticket Reports mock data
-const TICKET_TABLE_DATA = [
+const TICKET_TABLE_DATA: TicketTableData[] = [
   { key: "30d", range: "Last 30 Days", total: 320, open: 40, inprogress: 60, completed: 200, failed: 20, avg: 3.2 },
   { key: "30d", range: "2024-06-01 to 2024-06-15", total: 170, open: 20, inprogress: 30, completed: 110, failed: 10, avg: 3.1 },
   { key: "30d", range: "2024-05-16 to 2024-05-31", total: 150, open: 20, inprogress: 30, completed: 90, failed: 10, avg: 3.3 },
@@ -51,16 +83,16 @@ const TICKET_TABLE_DATA = [
   { key: "1d", range: "2024-06-15", total: 6, open: 1, inprogress: 1, completed: 4, failed: 0, avg: 2.6 },
 ];
 
-export default function Report() {
-  const [activeTab, setActiveTab] = useState("process");
-  const [exportOpen, setExportOpen] = useState(false);
-  const [theme, setTheme] = useState(
+export default function Report(): JSX.Element {
+  const [activeTab, setActiveTab] = useState<string>("process");
+  const [exportOpen, setExportOpen] = useState<boolean>(false);
+  const [theme, setTheme] = useState<string>(
     () => localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
   );
-  const [periodOpen, setPeriodOpen] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState(TIME_PERIODS[0].key);
+  const [periodOpen, setPeriodOpen] = useState<boolean>(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(TIME_PERIODS[0].key);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -71,7 +103,7 @@ export default function Report() {
   }, [theme]);
 
   // Export functionality (mock)
-  const handleExport = (type) => {
+  const handleExport = (type: string): void => {
     setExportOpen(false);
     alert(`Exporting as ${type.toUpperCase()}... (mock)`);
   };

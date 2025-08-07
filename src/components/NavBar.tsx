@@ -3,17 +3,27 @@ import { Link, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
-const navLinks = [
+interface NavLink {
+  name: string;
+  to: string;
+}
+
+interface NavBarProps {
+  theme: 'dark' | 'light';
+  toggleTheme: () => void;
+}
+
+const navLinks: NavLink[] = [
   { name: 'Dashboard', to: '/' },
   { name: 'Processes', to: '/process' },
-  { name: 'Add Process', to: '/addProcess' },
   { name: 'Orchestration', to: '/ticketlisting' },
   { name: 'Reports', to: '/reports' },
   { name: 'Settings', to: '/settings' },
 ];
 
-function NavBar({ theme, toggleTheme }) {
+function NavBar({ theme, toggleTheme }: NavBarProps) {
   const location = useLocation();
+  
   return (
     <nav className="w-full bg-white text-gray-900 dark:bg-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-8">

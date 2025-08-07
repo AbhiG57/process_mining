@@ -1,6 +1,6 @@
 import React from 'react';
 
-function About() {
+function About(): JSX.Element {
   return <h2>About Page</h2>;
 }
 

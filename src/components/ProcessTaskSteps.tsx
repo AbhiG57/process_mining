@@ -20,7 +20,33 @@ import {
   faArrowsSplitUpAndLeft
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-const taskIconMap = {
+
+interface Task {
+  task_number: number;
+  task_name: string;
+  task_description: string;
+  steps: string[];
+}
+
+interface ProcessData {
+  process_title: string;
+  video_analysis_summary: string;
+  tasks: Task[];
+}
+
+interface EditTaskModalProps {
+  open: boolean;
+  onClose: () => void;
+  task: Task | null;
+  onSave: (task: Task) => void;
+  onDelete: (taskNumber: number) => void;
+  onReorder: (taskNumber: number, direction: 'up' | 'down') => void;
+  onMerge: (taskNumber: number, targetTaskNumber: number) => void;
+  onSplit: (taskNumber: number, splitStep: number) => void;
+  tasks: Task[];
+}
+
+const taskIconMap: Record<number, any> = {
   1: faUser,
   2: faSearch,
   3: faClipboardList,
@@ -31,7 +57,7 @@ const taskIconMap = {
   8: faCreditCard
 };
 
-const processData = {
+const processData: ProcessData = {
   process_title: "Shopping on Amazon",
   video_analysis_summary:
     "This video tutorial demonstrates how to shop on Amazon, covering login, search, selection, and checkout processes.",
@@ -136,21 +162,38 @@ const processData = {
   ]
 };
 
+const buttonStyle: React.CSSProperties = {
+  border: 'none',
+  borderRadius: 8,
+  padding: '8px 16px',
+  fontWeight: 600,
+  fontSize: 14,
+  cursor: 'pointer',
+  transition: 'background 0.2s'
+};
 
-function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMerge, onSplit, tasks }) {
-  if (!open) return null;
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 12px',
+  borderRadius: 8,
+  border: '1px solid #35373B',
+  fontSize: 14
+};
 
-  const [editedTask, setEditedTask] = useState(task);
-  const [editMode, setEditMode] = useState('basic'); // 'basic', 'steps', 'reorder', 'merge', 'split'
-  const [mergeTargetTask, setMergeTargetTask] = useState('');
-  const [splitStepNumber, setSplitStepNumber] = useState(1);
+function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMerge, onSplit, tasks }: EditTaskModalProps): JSX.Element | null {
+  if (!open || !task) return null;
 
-  const handleSave = () => {
+  const [editedTask, setEditedTask] = useState<Task>(task);
+  const [editMode, setEditMode] = useState<'basic' | 'steps' | 'reorder' | 'merge' | 'split'>('basic');
+  const [mergeTargetTask, setMergeTargetTask] = useState<string>('');
+  const [splitStepNumber, setSplitStepNumber] = useState<number>(1);
+
+  const handleSave = (): void => {
     onSave(editedTask);
     onClose();
   };
 
-  const renderEditOptions = () => {
+  const renderEditOptions = (): JSX.Element => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
         <button 
@@ -204,14 +247,15 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
     );
   };
 
-  const renderBasicEdit = () => (
+  const renderBasicEdit = (): JSX.Element => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div>
         <label style={{ display: 'block', marginBottom: '4px' }}>Task Name</label>
         <input
           type="text"
-          className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"          value={editedTask.task_name}
-          onChange={(e) => setEditedTask({...editedTask, task_name: e.target.value})}
+          className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
+          value={editedTask.task_name}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditedTask({...editedTask, task_name: e.target.value})}
           style={inputStyle}
         />
       </div>
@@ -220,7 +264,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         <textarea
           value={editedTask.task_description}
           className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
-          onChange={(e) => setEditedTask({...editedTask, task_description: e.target.value})}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditedTask({...editedTask, task_description: e.target.value})}
           style={{...inputStyle, minHeight: '100px'}}
         />
       </div>
@@ -229,7 +273,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         <select
           value={editedTask.task_number}
           className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
-          onChange={(e) => setEditedTask({...editedTask, task_number: parseInt(e.target.value)})}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setEditedTask({...editedTask, task_number: parseInt(e.target.value)})}
           style={inputStyle}
         >
           {Object.entries(taskIconMap).map(([num, icon]) => (
@@ -242,14 +286,14 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
     </div>
   );
 
-  const renderStepsEdit = () => (
+  const renderStepsEdit = (): JSX.Element => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       {editedTask.steps.map((step, index) => (
         <div key={index} style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
             value={step}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               const newSteps = [...editedTask.steps];
               newSteps[index] = e.target.value;
               setEditedTask({...editedTask, steps: newSteps});
@@ -280,14 +324,14 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
     </div>
   );
 
-  const renderMergeOptions = () => (
+  const renderMergeOptions = (): JSX.Element => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div style={{ marginBottom: '8px' }}>
         Select a task to merge with the current task. The steps from both tasks will be combined.
       </div>
       <select 
         value={mergeTargetTask} 
-        onChange={(e) => setMergeTargetTask(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMergeTargetTask(e.target.value)}
         style={inputStyle}
         className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
       >
@@ -315,7 +359,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
     </div>
   );
 
-  const renderSplitOptions = () => (
+  const renderSplitOptions = (): JSX.Element => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div style={{  marginBottom: '8px' }}>
         Choose the step number where you want to split this task. The task will be divided into two separate tasks.
@@ -325,7 +369,7 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
         min="1"
         max={editedTask.steps.length}
         value={splitStepNumber}
-        onChange={(e) => setSplitStepNumber(Math.min(Math.max(1, parseInt(e.target.value) || 1), editedTask.steps.length))}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSplitStepNumber(Math.min(Math.max(1, parseInt(e.target.value) || 1), editedTask.steps.length))}
         style={inputStyle}
         className="bg-gray-200 text-black dark:bg-gray-800 dark:text-white"
       />
@@ -394,61 +438,43 @@ function EditTaskModal({ open, onClose, task, onSave, onDelete, onReorder, onMer
       </div>
     </div>
   );
-};
+}
 
-const buttonStyle = {
-  border: 'none',
-  borderRadius: 8,
-  padding: '8px 16px',
-  fontWeight: 600,
-  fontSize: 14,
-  cursor: 'pointer',
-  transition: 'background 0.2s'
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '8px 12px',
-  borderRadius: 8,
-  border: '1px solid #35373B',
-  fontSize: 14
-};
-
-export default function ProcessTaskSteps() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalSteps, setModalSteps] = useState([]);
-  const [modalTaskName, setModalTaskName] = useState("");
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState(null);
-  const [tasks, setTasks] = useState(processData.tasks);
+export default function ProcessTaskSteps(): JSX.Element {
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [modalSteps, setModalSteps] = useState<string[]>([]);
+  const [modalTaskName, setModalTaskName] = useState<string>("");
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [tasks, setTasks] = useState<Task[]>(processData.tasks);
   const navigate = useNavigate();
-  const [reorderedTask, setReorderedTask] = useState(null);
-  const [showReorderMsg, setShowReorderMsg] = useState(false);
-  const reorderTimeout = useRef(null);
+  const [reorderedTask, setReorderedTask] = useState<number | null>(null);
+  const [showReorderMsg, setShowReorderMsg] = useState<boolean>(false);
+  const reorderTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const openModal = (steps, name) => {
+  const openModal = (steps: string[], name: string): void => {
     setModalSteps(steps);
     setModalTaskName(name);
     setModalOpen(true);
   };
 
-  const handleEditTask = (task) => {
+  const handleEditTask = (task: Task): void => {
     setEditingTask(task);
     setEditModalOpen(true);
   };
 
-  const handleSaveTask = (updatedTask) => {
+  const handleSaveTask = (updatedTask: Task): void => {
     setTasks(tasks.map(task => 
       task.task_number === updatedTask.task_number ? updatedTask : task
     ));
   };
 
-  const handleDeleteTask = (taskNumber) => {
+  const handleDeleteTask = (taskNumber: number): void => {
     setTasks(tasks.filter(task => task.task_number !== taskNumber));
     setEditModalOpen(false);
   };
 
-  const handleReorderTask = (taskNumber, direction) => {
+  const handleReorderTask = (taskNumber: number, direction: 'up' | 'down'): void => {
     const currentIndex = tasks.findIndex(task => task.task_number === taskNumber);
     if (
       (direction === 'up' && currentIndex === 0) ||
@@ -468,12 +494,12 @@ export default function ProcessTaskSteps() {
     }, 2000);
   };
 
-  const handleMergeTasks = (taskNumber, targetTaskNumber) => {
+  const handleMergeTasks = (taskNumber: number, targetTaskNumber: number): void => {
     const sourceTask = tasks.find(t => t.task_number === taskNumber);
     const targetTask = tasks.find(t => t.task_number === targetTaskNumber);
     
     if (sourceTask && targetTask) {
-      const mergedTask = {
+      const mergedTask: Task = {
         ...targetTask,
         task_name: `${targetTask.task_name} + ${sourceTask.task_name}`,
         steps: [...targetTask.steps, ...sourceTask.steps]
@@ -485,16 +511,16 @@ export default function ProcessTaskSteps() {
     setEditModalOpen(false);
   };
 
-  const handleSplitTask = (taskNumber, splitStep) => {
+  const handleSplitTask = (taskNumber: number, splitStep: number): void => {
     const taskToSplit = tasks.find(t => t.task_number === taskNumber);
     if (taskToSplit && splitStep < taskToSplit.steps.length) {
-      const firstPart = {
+      const firstPart: Task = {
         ...taskToSplit,
         task_name: `${taskToSplit.task_name} (Part 1)`,
         steps: taskToSplit.steps.slice(0, splitStep)
       };
       
-      const secondPart = {
+      const secondPart: Task = {
         ...taskToSplit,
         task_number: Math.max(...tasks.map(t => t.task_number)) + 1,
         task_name: `${taskToSplit.task_name} (Part 2)`,

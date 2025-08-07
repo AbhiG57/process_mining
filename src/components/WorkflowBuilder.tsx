@@ -7,6 +7,17 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
+  Node,
+  Edge,
+  Connection,
+  ReactFlowInstance,
+  NodeDragHandler,
+  EdgeMouseHandler,
+  OnConnect,
+  OnNodesChange,
+  OnEdgesChange,
+  OnDrop,
+  OnDragOver,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -17,12 +28,41 @@ import ErrorHandlerNode from "./nodes/ErrorHandlerNode";
 import Sidebar from "./Sidebar";
 import AnimatedDottedEdge from "./AnimatedDottedEdge";
 
+interface Task {
+  id: string;
+  label: string;
+  department: string;
+}
+
+interface NodeData {
+  label: string;
+  department?: string;
+  stageNumber?: number;
+  description?: string;
+  onDelete?: () => void;
+  isNewStage?: boolean;
+  isNewTask?: boolean;
+}
+
+interface LabelEditState {
+  open: boolean;
+  nodeId: string | null;
+  type: string;
+  placeholder: string;
+  label: string;
+}
+
+interface WorkflowState {
+  nodes: Node[];
+  edges: Edge[];
+}
+
 // Utility functions for localStorage persistence
 const STORAGE_KEY = "workflow-builder-state";
 
-const saveToLocalStorage = (nodes, edges) => {
+const saveToLocalStorage = (nodes: Node[], edges: Edge[]): void => {
   try {
-    const state = {
+    const state: WorkflowState = {
       nodes: nodes.map((node) => ({
         ...node,
         // Ensure we only save necessary data
@@ -40,7 +80,7 @@ const saveToLocalStorage = (nodes, edges) => {
   }
 };
 
-const loadFromLocalStorage = () => {
+const loadFromLocalStorage = (): WorkflowState | null => {
   try {
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {
@@ -64,7 +104,7 @@ const edgeTypes = {
   "animated-dotted": AnimatedDottedEdge,
 };
 
-const initialSidebarTasks = [
+const initialSidebarTasks: Task[] = [
   {
     id: "1",
     label: "Product Selection and Review",
@@ -82,7 +122,7 @@ const initialSidebarTasks = [
   { id: "7", label: "Order Returns", department: "Order Returns" },
 ];
 
-const initialNodesBase = [
+const initialNodesBase: Node[] = [
   {
     id: "stage-1",
     type: "stage",
@@ -131,7 +171,7 @@ const initialNodesBase = [
   },
 ];
 
-const initialEdgesBase = [
+const initialEdgesBase: Edge[] = [
   { id: "e1-2", source: "stage-1", target: "ifelse-1", animated: false },
   { id: "e2-3", source: "ifelse-1", target: "stage-2", animated: false },
   {
@@ -143,11 +183,11 @@ const initialEdgesBase = [
   },
 ];
 
-function isInsideStage(stageNode, position) {
+function isInsideStage(stageNode: Node, position: { x: number; y: number }): boolean {
   // Check if a point is inside the bounding box of a stage node
   const { x, y } = stageNode.position;
-  const width = stageNode.style?.width || 220;
-  const height = stageNode.style?.height || 140;
+  const width = (stageNode.style as any)?.width || 220;
+  const height = (stageNode.style as any)?.height || 140;
   return (
     position.x > x &&
     position.x < x + width &&
@@ -156,9 +196,17 @@ function isInsideStage(stageNode, position) {
   );
 }
 
+interface LabelEditModalProps {
+  open: boolean;
+  label: string;
+  onSave: (label: string) => void;
+  onClose: () => void;
+  placeholder: string;
+}
+
 // Add a simple modal for label editing
-function LabelEditModal({ open, label, onSave, onClose, placeholder }) {
-  const [value, setValue] = useState(label || "");
+function LabelEditModal({ open, label, onSave, onClose, placeholder }: LabelEditModalProps): JSX.Element | null {
+  const [value, setValue] = useState<string>(label || "");
   if (!open) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -169,7 +217,7 @@ function LabelEditModal({ open, label, onSave, onClose, placeholder }) {
         <input
           className="w-full p-2 rounded bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 mb-4"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value)}
           autoFocus
         />
         <div className="flex gap-2 justify-end">
@@ -191,42 +239,42 @@ function LabelEditModal({ open, label, onSave, onClose, placeholder }) {
   );
 }
 
-export default function WorkflowBuilder() {
+export default function WorkflowBuilder(): JSX.Element {
   // Load initial state from localStorage or use defaults
   const savedState = loadFromLocalStorage();
   const initialNodes = savedState?.nodes || initialNodesBase;
   const initialEdges = savedState?.edges || initialEdgesBase;
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
-  const onInit = (instance) => {
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const onInit = (instance: ReactFlowInstance): void => {
     console.log("React Flow Ready:", instance);
     setReactFlowInstance(instance);
   };
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [sidebarTasks, setSidebarTasks] = useState(() => {
+  const [sidebarTasks, setSidebarTasks] = useState<Task[]>(() => {
     // Filter out tasks that are already on the canvas
     const taskNodes = initialNodes.filter((node) => node.type === "taskCard");
     return initialSidebarTasks.filter(
       (task) => !taskNodes.some((node) => node.data.label === task.label)
     );
   });
-  const reactFlowWrapper = useRef(null);
-  const stageIdRef = useRef(3);
-  const taskIdRef = useRef(3);
-  const [labelEdit, setLabelEdit] = useState({
+  const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const stageIdRef = useRef<number>(3);
+  const taskIdRef = useRef<number>(3);
+  const [labelEdit, setLabelEdit] = useState<LabelEditState>({
     open: false,
     nodeId: null,
     type: "",
     placeholder: "",
     label: "",
   });
-  const [selectedEdge, setSelectedEdge] = useState(null);
-  const [showEdgeDeleteHelp, setShowEdgeDeleteHelp] = useState(false);
+  const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
+  const [showEdgeDeleteHelp, setShowEdgeDeleteHelp] = useState<boolean>(false);
   // Animation state for new nodes
-  const [newStageId, setNewStageId] = useState(null);
-  const [newTaskId, setNewTaskId] = useState(null);
-  const stageNumberRef = useRef(1); // For unique, persistent stage numbers
+  const [newStageId, setNewStageId] = useState<string | null>(null);
+  const [newTaskId, setNewTaskId] = useState<string | null>(null);
+  const stageNumberRef = useRef<number>(1); // For unique, persistent stage numbers
 
   // Save to localStorage whenever nodes or edges change
   useEffect(() => {
@@ -234,7 +282,7 @@ export default function WorkflowBuilder() {
   }, [nodes, edges]);
 
   // Enhanced node change handler
-  const handleNodesChange = useCallback(
+  const handleNodesChange: OnNodesChange = useCallback(
     (changes) => {
       onNodesChange(changes);
     },
@@ -242,7 +290,7 @@ export default function WorkflowBuilder() {
   );
 
   // Enhanced edge change handler
-  const handleEdgesChange = useCallback(
+  const handleEdgesChange: OnEdgesChange = useCallback(
     (changes) => {
       onEdgesChange(changes);
     },
@@ -250,7 +298,7 @@ export default function WorkflowBuilder() {
   );
 
   // Enhanced node drag stop handler
-  const handleNodeDragStop = useCallback(
+  const handleNodeDragStop: NodeDragHandler = useCallback(
     (event, node) => {
       if (node.type !== "taskCard") return;
 
@@ -287,8 +335,8 @@ export default function WorkflowBuilder() {
   );
 
   // Enhanced connect handler
-  const onConnect = useCallback(
-    (params) => {
+  const onConnect: OnConnect = useCallback(
+    (params: Connection) => {
       setEdges((eds) => addEdge({ ...params, animated: false }, eds));
     },
     [setEdges]
@@ -296,14 +344,14 @@ export default function WorkflowBuilder() {
 
   // Pass delete handlers to node data
   const nodesWithHandlers = nodes.map((node, idx) => {
-    let extra = {};
+    let extra: Partial<NodeData> = {};
     if (node.type === "stage" && node.id === newStageId)
       extra.isNewStage = true;
     if (node.type === "taskCard" && node.id === newTaskId)
       extra.isNewTask = true;
     if (node.type === "stage") {
       // Assign stageNumber if not present
-      let stageNumber = node.data.stageNumber;
+      let stageNumber = (node.data as NodeData).stageNumber;
       if (typeof stageNumber !== "number") {
         // Find the index among all stage nodes (sorted by appearance)
         const stageNodes = nodes.filter((n) => n.type === "stage");
@@ -358,7 +406,7 @@ export default function WorkflowBuilder() {
     type: "animated-dotted",
   }));
 
-  const handleAddIfElse = () => {
+  const handleAddIfElse = (): void => {
     const newId = `ifelse-${Date.now()}`;
     setNodes((nds) =>
       nds.concat({
@@ -381,7 +429,7 @@ export default function WorkflowBuilder() {
     );
   };
 
-  const handleAddErrorHandler = () => {
+  const handleAddErrorHandler = (): void => {
     const newId = `error-${Date.now()}`;
     setNodes((nds) =>
       nds.concat({
@@ -404,7 +452,7 @@ export default function WorkflowBuilder() {
     );
   };
 
-  const handleLabelEditSave = (newLabel) => {
+  const handleLabelEditSave = (newLabel: string): void => {
     setNodes((nds) =>
       nds.map((n) =>
         n.id === labelEdit.nodeId
@@ -421,7 +469,7 @@ export default function WorkflowBuilder() {
     });
   };
 
-  const handleLabelEditClose = () =>
+  const handleLabelEditClose = (): void =>
     setLabelEdit({
       open: false,
       nodeId: null,
@@ -431,14 +479,14 @@ export default function WorkflowBuilder() {
     });
 
   // Edge selection handler
-  const onEdgeClick = (event, edge) => {
+  const onEdgeClick: EdgeMouseHandler = (event, edge) => {
     setSelectedEdge(edge.id);
     setShowEdgeDeleteHelp(true);
   };
 
   // Keyboard event handler
   React.useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === "Delete" || e.key === "Backspace") && selectedEdge) {
         setEdges((eds) => eds.filter((e) => e.id !== selectedEdge));
         setSelectedEdge(null);
@@ -449,7 +497,7 @@ export default function WorkflowBuilder() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedEdge, setEdges]);
 
-  const handleDragStop = useCallback(
+  const handleDragStop: NodeDragHandler = useCallback(
     (event, draggedNode) => {
       if (draggedNode.type !== "taskCard") return;
 
@@ -522,75 +570,12 @@ export default function WorkflowBuilder() {
   );
 
   // Deselect edge on canvas click
-  const onPaneClick = () => {
+  const onPaneClick = (): void => {
     setSelectedEdge(null);
     setShowEdgeDeleteHelp(false);
   };
 
-  /* const handleDragStop = useCallback(
-    (event, node) => {
-      if (node.type !== 'taskCard') return;
-  
-      // 🔑 Work only with the freshest array React hands you
-      setNodes(prevNodes => {
-        // 1️⃣  all look‑ups use prevNodes, NOT `nodes` from closure
-        const getPrevParent = prevNodes.find(item => item.id === node.parentId);
-  
-        const taskCardBox = {
-          x: getPrevParent ? node.position.x - getPrevParent.position.x : node.position.x,
-          y: getPrevParent ? node.position.y - getPrevParent.position.y : node.position.y,
-          width: node.measured?.width ?? 120,
-          height: node.measured?.height ?? 80,
-        };
-  
-        const parentBoxArr = prevNodes.filter(item => {
-          if (item.type !== 'stage') return false;
-          return nodeInsideParent(
-            taskCardBox,
-            item.position,
-            item.measured?.height,
-            item.measured?.width
-          );
-        });
-  
-        // 2️⃣  return the new nodes array
-        return prevNodes.map(n => {
-          if (n.id !== node.id) return n;
-  
-          // — inside‐stage —
-          if (parentBoxArr[0]) {
-            const parent = parentBoxArr[0];
-            return {
-              ...n,
-              position: {
-                x: n.position.x - parent.position.x,
-                y: n.position.y - parent.position.y,
-              },
-              parentId: parent.id,
-            };
-          }
-  
-          // — dragged out of its old stage —
-          if (getPrevParent) {
-            return {
-              ...n,
-              position: {
-                x: n.position.x + getPrevParent.position.x,
-                y: n.position.y + getPrevParent.position.y,
-              },
-              parentId: null,
-            };
-          }
-  
-          // — no parent, plain move —
-          return { ...n, parentId: null };
-        });
-      });
-    },
-    [setNodes]   // ⬅️  NO `nodes` here; keeps callback stable
-  ); */
-
-  function nodeInsideParent(childBox, parentPos, parentHeight, parentWidth) {
+  function nodeInsideParent(childBox: { x: number; y: number; width: number; height: number }, parentPos: { x: number; y: number }, parentHeight: number, parentWidth: number): boolean {
     return (
       childBox.x >= parentPos.x &&
       childBox.y >= parentPos.y &&
@@ -600,15 +585,15 @@ export default function WorkflowBuilder() {
   }
 
   // Add new Stage node (without useRef, use maxStageNumber + 1)
-  const handleAddStage = () => {
+  const handleAddStage = (): void => {
     const newId = `stage-${Date.now()}`;
 
     // Compute the next available stage number
     const usedStageNumbers = nodes
       .filter(
-        (n) => n.type === "stage" && typeof n.data.stageNumber === "number"
+        (n) => n.type === "stage" && typeof (n.data as NodeData).stageNumber === "number"
       )
-      .map((n) => n.data.stageNumber);
+      .map((n) => (n.data as NodeData).stageNumber);
     const maxStageNumber =
       usedStageNumbers.length > 0 ? Math.max(...usedStageNumbers) : 0;
     const stageNumber = maxStageNumber + 1;
@@ -635,7 +620,7 @@ export default function WorkflowBuilder() {
   };
 
   // Delete Stage and its children
-  const handleDeleteStage = (stageId) => {
+  const handleDeleteStage = (stageId: string): void => {
     setNodes((nds) => {
       // Remove the stage and its children
       const filtered = nds.filter(
@@ -665,7 +650,7 @@ export default function WorkflowBuilder() {
   };
 
   // Delete TaskCard and add back to sidebar
-  const handleDeleteTaskCard = (taskId) => {
+  const handleDeleteTaskCard = (taskId: string): void => {
     const taskNode = nodes.find((n) => n.id === taskId);
     if (taskNode) {
       // Only add back to sidebar if it's not already there
@@ -691,13 +676,15 @@ export default function WorkflowBuilder() {
   };
 
   // Handle drop from sidebar (unassigned tasks)
-  const onDrop = useCallback(
-    (event) => {
+  const onDrop: OnDrop = useCallback(
+    (event: React.DragEvent) => {
       event.preventDefault();
+      if (!reactFlowWrapper.current || !reactFlowInstance) return;
+      
       const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
       const data = event.dataTransfer.getData("application/reactflow");
       if (!data) return;
-      const task = JSON.parse(data);
+      const task: Task = JSON.parse(data);
       const { x: flowX, y: flowY } = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY,
@@ -706,7 +693,7 @@ export default function WorkflowBuilder() {
         x: flowX,
         y: flowY,
       };
-      const newNode = {
+      const newNode: Node = {
         id: task.id,
         type: "taskCard",
         position,
@@ -718,12 +705,12 @@ export default function WorkflowBuilder() {
       setNewTaskId(task.id);
       setTimeout(() => setNewTaskId(null), 400);
       // Call handleDragStop for sidebar drop
-      handleDragStop(event, newNode);
+      handleDragStop(event as any, newNode);
     },
-    [setNodes, reactFlowInstance]
+    [setNodes, reactFlowInstance, handleDragStop]
   );
 
-  const onDragOver = useCallback((event) => {
+  const onDragOver: OnDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
   }, []);
@@ -841,4 +828,4 @@ export default function WorkflowBuilder() {
       `}</style>
     </div>
   );
-}
+} 

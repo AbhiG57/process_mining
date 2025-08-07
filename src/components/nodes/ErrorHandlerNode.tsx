@@ -1,12 +1,23 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faExclamationTriangle, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Handle, Position, NodeResizeControl } from '@xyflow/react';
+import { Handle, Position, NodeResizeControl, NodeProps } from '@xyflow/react';
 
-export default function ErrorHandlerNode({ data,selected }) {
+interface ErrorHandlerNodeData {
+  label: string;
+  description: string;
+  onDelete: () => void;
+}
+
+interface ErrorHandlerNodeProps extends NodeProps {
+  data: ErrorHandlerNodeData;
+  selected?: boolean;
+}
+
+export default function ErrorHandlerNode({ data, selected }: ErrorHandlerNodeProps): JSX.Element {
   return (
     <div className="rounded-lg bg-white dark:bg-red-900 border-2 border-red-200 dark:border-red-600 shadow-lg p-3 min-w-[140px] min-h-[60px] flex flex-col relative text-xs w-full h-full">
       <NodeResizeControl style={{width: '10px', height: '10px',backgroundColor: 'red'}} color="#3b82f6" isVisible={selected} minWidth={120} minHeight={60} />
-     
+      
       <Handle type="target" position={Position.Left} className="!w-2 !h-2 !bg-red-500" />
       <Handle type="source" position={Position.Right} className="!w-2 !h-2 !bg-red-500" />
       <div className="flex items-center gap-2 mb-1 justify-between">

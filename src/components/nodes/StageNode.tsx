@@ -1,8 +1,21 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLayerGroup, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Handle, Position, NodeResizeControl } from '@xyflow/react';
+import { Handle, Position, NodeResizeControl, NodeProps } from '@xyflow/react';
 
-export default function StageNode({ data, selected }) {
+interface StageNodeData {
+  label: string;
+  stageNumber?: number;
+  isNewStage?: boolean;
+  onDelete: () => void;
+  children?: React.ReactNode;
+}
+
+interface StageNodeProps extends NodeProps {
+  data: StageNodeData;
+  selected?: boolean;
+}
+
+export default function StageNode({ data, selected }: StageNodeProps): JSX.Element {
   return (
     <div
       className={

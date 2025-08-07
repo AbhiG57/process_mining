@@ -3,7 +3,48 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faHourglassHalf, faExclamationCircle, faBoxOpen, faTruck, faWarehouse, faClipboardList, faUser, faHistory, faTimesCircle, faHeart as faHeartSolid } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 
-const TICKET_DATA = [
+interface Task {
+  name: string;
+  status: 'completed' | 'inprogress' | 'pending' | 'error' | 'none';
+}
+
+interface Stage {
+  name: string;
+  icon: any;
+  color: string;
+  tasks: Task[];
+}
+
+interface Workflow {
+  orderNumber: string;
+  eta: string;
+  orderDate: string;
+  progress: number;
+  stages: Stage[];
+  logs: string[];
+  selectedTask: {
+    stageIdx: number;
+    taskIdx: number;
+  };
+}
+
+interface Ticket {
+  id: string;
+  customer: string;
+  status: 'open' | 'closed';
+  liked: boolean;
+  workflow: Workflow;
+}
+
+interface StatusConfig {
+  label: string;
+  color: string;
+  icon: any;
+  bg: string;
+  text: string;
+}
+
+const TICKET_DATA: Ticket[] = [
   {
     id: '4321',
     customer: 'John Doe',
@@ -170,7 +211,7 @@ const TICKET_DATA = [
   },
 ];
 
-const STATUS_MAP = {
+const STATUS_MAP: Record<string, StatusConfig> = {
   completed: {
     label: 'COMPLETED',
     color: 'green',
@@ -208,11 +249,11 @@ const STATUS_MAP = {
   },
 };
 
-export default function TicketFlow() {
-  const [tickets, setTickets] = useState(TICKET_DATA);
-  const [filter, setFilter] = useState('all');
-  const [selectedTicketId, setSelectedTicketId] = useState(tickets[0].id);
-  const [selectedTask, setSelectedTask] = useState(tickets[0].workflow.selectedTask);
+export default function TicketFlow(): JSX.Element {
+  const [tickets, setTickets] = useState<Ticket[]>(TICKET_DATA);
+  const [filter, setFilter] = useState<'all' | 'open' | 'closed'>('all');
+  const [selectedTicketId, setSelectedTicketId] = useState<string>(tickets[0].id);
+  const [selectedTask, setSelectedTask] = useState<{ stageIdx: number; taskIdx: number }>(tickets[0].workflow.selectedTask);
 
   // Filtered tickets
   const filteredTickets = tickets.filter(t => filter === 'all' ? true : t.status === filter);
@@ -220,18 +261,18 @@ export default function TicketFlow() {
   const workflow = selectedTicket.workflow;
 
   // Like button handler
-  const toggleLike = (id) => {
+  const toggleLike = (id: string): void => {
     setTickets(ts => ts.map(t => t.id === id ? { ...t, liked: !t.liked } : t));
   };
 
   // Ticket select handler
-  const handleTicketSelect = (id) => {
+  const handleTicketSelect = (id: string): void => {
     setSelectedTicketId(id);
     setSelectedTask(tickets.find(t => t.id === id)?.workflow.selectedTask || { stageIdx: 0, taskIdx: 0 });
   };
 
   // Task select handler
-  const handleTaskSelect = (stageIdx, taskIdx) => {
+  const handleTaskSelect = (stageIdx: number, taskIdx: number): void => {
     setSelectedTask({ stageIdx, taskIdx });
   };
 
@@ -286,7 +327,7 @@ export default function TicketFlow() {
                     </span>
                     <button
                       className="ml-2 text-lg focus:outline-none"
-                      onClick={e => { e.stopPropagation(); toggleLike(ticket.id); }}
+                      onClick={(e: React.MouseEvent) => { e.stopPropagation(); toggleLike(ticket.id); }}
                       title={ticket.liked ? 'Unlike' : 'Like'}
                     >
                       <FontAwesomeIcon icon={ticket.liked ? faHeartSolid : faHeartRegular} className={ticket.liked ? 'text-red-500' : 'text-gray-400'} />

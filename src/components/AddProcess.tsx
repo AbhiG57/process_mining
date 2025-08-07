@@ -13,41 +13,59 @@ import {
   faBolt
 } from '@fortawesome/free-solid-svg-icons';
 
-const AddProcess = () => {
-  const [activeTab, setActiveTab] = useState('video');
-  const [processName, setProcessName] = useState('');
-  const [processDescription, setProcessDescription] = useState('');
-  const [url, setUrl] = useState('');
-  const [integrations, setIntegrations] = useState({
+interface Integrations {
+  teams: boolean;
+  serviceNow: boolean;
+  email: boolean;
+}
+
+interface Tab {
+  id: string;
+  label: string;
+  icon: any;
+}
+
+interface Integration {
+  key: keyof Integrations;
+  label: string;
+  enabled: boolean;
+}
+
+const AddProcess = (): JSX.Element => {
+  const [activeTab, setActiveTab] = useState<string>('video');
+  const [processName, setProcessName] = useState<string>('');
+  const [processDescription, setProcessDescription] = useState<string>('');
+  const [url, setUrl] = useState<string>('');
+  const [integrations, setIntegrations] = useState<Integrations>({
     teams: false,
     serviceNow: true,
     email: false
   });
 
-  const handleIntegrationToggle = (integration) => {
+  const handleIntegrationToggle = (integration: keyof Integrations): void => {
     setIntegrations(prev => ({
       ...prev,
       [integration]: !prev[integration]
     }));
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const files = event.target.files;
     // Handle file upload logic here
     console.log('Files uploaded:', files);
   };
 
-  const handleStartIngestion = () => {
+  const handleStartIngestion = (): void => {
     // Handle start ingestion logic here
     console.log('Starting ingestion process...');
   };
 
-  const handlePreviewLogs = () => {
+  const handlePreviewLogs = (): void => {
     // Handle preview logs logic here
     console.log('Previewing logs...');
   };
 
-  const handleReset = () => {
+  const handleReset = (): void => {
     setProcessName('');
     setProcessDescription('');
     setUrl('');
@@ -57,6 +75,18 @@ const AddProcess = () => {
       email: false
     });
   };
+
+  const tabs: Tab[] = [
+    { id: 'video', label: 'Video', icon: faVideo },
+    { id: 'documents', label: 'Documents', icon: faFileAlt },
+    { id: 'images', label: 'Images', icon: faImage }
+  ];
+
+  const integrationList: Integration[] = [
+    { key: 'teams', label: 'Microsoft Teams', enabled: integrations.teams },
+    { key: 'serviceNow', label: 'ServiceNow', enabled: integrations.serviceNow },
+    { key: 'email', label: 'Email', enabled: integrations.email }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -109,11 +139,7 @@ const AddProcess = () => {
             
             {/* Tabs */}
             <div className="flex space-x-1 mb-4">
-              {[
-                { id: 'video', label: 'Video', icon: faVideo },
-                { id: 'documents', label: 'Documents', icon: faFileAlt },
-                { id: 'images', label: 'Images', icon: faImage }
-              ].map((tab) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -184,11 +210,7 @@ const AddProcess = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-4">Ingest logs and data directly from your favorite tools.</p>
           
           <div className="space-y-4">
-            {[
-              { key: 'teams', label: 'Microsoft Teams', enabled: integrations.teams },
-              { key: 'serviceNow', label: 'ServiceNow', enabled: integrations.serviceNow },
-              { key: 'email', label: 'Email', enabled: integrations.email }
-            ].map((integration) => (
+            {integrationList.map((integration) => (
               <div key={integration.key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
                 <span className="text-gray-700 dark:text-gray-300">{integration.label}</span>
                 <button

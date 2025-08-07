@@ -1,7 +1,18 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEnvelope, faTrash } from '@fortawesome/free-solid-svg-icons';
 
-export default function TaskCardNode({ data }) {
+interface TaskCardNodeData {
+  label: string;
+  department: string;
+  isNewTask?: boolean;
+  onDelete: () => void;
+}
+
+interface TaskCardNodeProps {
+  data: TaskCardNodeData;
+}
+
+export default function TaskCardNode({ data }: TaskCardNodeProps): JSX.Element {
   return (
     <div
       className={

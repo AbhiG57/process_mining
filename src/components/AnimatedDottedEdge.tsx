@@ -1,6 +1,21 @@
-import { BaseEdge, getBezierPath } from '@xyflow/react';
+import { BaseEdge, getBezierPath, EdgeProps } from '@xyflow/react';
 
-export default function AnimatedDottedEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd }) {
+interface AnimatedDottedEdgeProps extends EdgeProps {
+  style?: React.CSSProperties;
+  markerEnd?: string;
+}
+
+export default function AnimatedDottedEdge({ 
+  id, 
+  sourceX, 
+  sourceY, 
+  targetX, 
+  targetY, 
+  sourcePosition, 
+  targetPosition, 
+  style = {}, 
+  markerEnd 
+}: AnimatedDottedEdgeProps): JSX.Element {
   const [edgePath] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
   return (
     <g>
@@ -9,7 +24,7 @@ export default function AnimatedDottedEdge({ id, sourceX, sourceY, targetX, targ
         d={edgePath}
         style={{
           fill: 'none',
-          stroke: style.stroke || '#38bdf8',
+          stroke: (style as any).stroke || '#38bdf8',
           strokeWidth: 4,
           strokeDasharray: '6, 8',
           strokeDashoffset: 0,
