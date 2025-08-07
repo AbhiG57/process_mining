@@ -38,7 +38,7 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<ProcessListing />} />
         <Route path="/process/:id" element={<ProcessTaskSteps />} />
-        <Route path="/createProcess" element={<CreateProcess/>}/>
+        <Route path="/createProcess" element={<AddProcess/>}/>
         <Route path="/addProcess" element={<AddProcess/>}/>
         <Route path="/orchestration/:id" element={<Orchestration />} />
         <Route path="/ticketflow" element={<TicketFlow />} />

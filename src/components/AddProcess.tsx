@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUpload, 
-  faLink, 
-  faQuestionCircle, 
-  faUser, 
-  faToggleOn, 
-  faToggleOff,
   faVideo,
   faFileAlt,
   faImage,
-  faBolt
+  faBolt,
+  faPlus
 } from '@fortawesome/free-solid-svg-icons';
+import AddToolIntegrationModal from './AddToolIntegrationModal';
 
 interface Integrations {
   teams: boolean;
@@ -31,7 +28,7 @@ interface Integration {
   enabled: boolean;
 }
 
-const AddProcess = (): JSX.Element => {
+const AddProcess: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('video');
   const [processName, setProcessName] = useState<string>('');
   const [processDescription, setProcessDescription] = useState<string>('');
@@ -41,6 +38,7 @@ const AddProcess = (): JSX.Element => {
     serviceNow: true,
     email: false
   });
+  const [showAddIntegrationModal, setShowAddIntegrationModal] = useState(false);
 
   const handleIntegrationToggle = (integration: keyof Integrations): void => {
     setIntegrations(prev => ({
@@ -206,7 +204,13 @@ const AddProcess = (): JSX.Element => {
 
         {/* External Integrations Section */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">External Integrations</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-between">
+            <span>External Integrations</span>
+            <button className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium focus:outline-none" onClick={() => setShowAddIntegrationModal(true)}>
+              <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
+              <span>Add New</span>
+            </button>
+          </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">Ingest logs and data directly from your favorite tools.</p>
           
           <div className="space-y-4">
@@ -255,6 +259,7 @@ const AddProcess = (): JSX.Element => {
           </button>
         </div>
       </div>
+      <AddToolIntegrationModal open={showAddIntegrationModal} onClose={() => setShowAddIntegrationModal(false)} />
     </div>
   );
 };
