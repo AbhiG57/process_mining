@@ -6,6 +6,7 @@ import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 const navLinks = [
   { name: 'Dashboard', to: '/' },
   { name: 'Processes', to: '/process' },
+  { name: 'Add Process', to: '/addProcess' },
   { name: 'Orchestration', to: '/ticketlisting' },
   { name: 'Reports', to: '/reports' },
   { name: 'Settings', to: '/settings' },

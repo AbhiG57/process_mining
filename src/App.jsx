@@ -9,6 +9,7 @@ import About from './components/About'
 import ProcessListing from './components/ProcessListing'
 import ProcessTaskSteps from './components/ProcessTaskSteps'
 import CreateProcess from './components/CreateProcess'
+import AddProcess from './components/AddProcess'
 import { height } from '@fortawesome/free-brands-svg-icons/fa42Group'
 import Orchestration from './components/Orchestration'
 import TicketFlow from './components/TicketFlow'
@@ -37,6 +38,7 @@ function App() {
         <Route path="/process" element={<ProcessListing />} />
         <Route path="/process/:id" element={<ProcessTaskSteps />} />
         <Route path="/createProcess" element={<CreateProcess/>}/>
+        <Route path="/addProcess" element={<AddProcess/>}/>
         <Route path="/orchestration/:id" element={<Orchestration />} />
         <Route path="/ticketflow" element={<TicketFlow />} />
         <Route path="/ticketlisting" element={<TicketListing />} />
