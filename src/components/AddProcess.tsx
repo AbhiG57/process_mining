@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUpload, 
@@ -6,10 +6,12 @@ import {
   faFileAlt,
   faImage,
   faBolt,
-  faPlus
+  faPlus,faTrash,
+  faChevronLeft,
+  faChevronRight
 } from '@fortawesome/free-solid-svg-icons';
 import AddToolIntegrationModal from './AddToolIntegrationModal';
-
+import { faMicrosoft, faSlack, faJira, faGithub, faLine } from '@fortawesome/free-brands-svg-icons';
 interface Integrations {
   teams: boolean;
   serviceNow: boolean;
@@ -49,17 +51,14 @@ const AddProcess: React.FC = () => {
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
     const files = event.target.files;
-    // Handle file upload logic here
     console.log('Files uploaded:', files);
   };
 
   const handleStartIngestion = (): void => {
-    // Handle start ingestion logic here
     console.log('Starting ingestion process...');
   };
 
   const handlePreviewLogs = (): void => {
-    // Handle preview logs logic here
     console.log('Previewing logs...');
   };
 
@@ -81,10 +80,21 @@ const AddProcess: React.FC = () => {
   ];
 
   const integrationList: Integration[] = [
-    { key: 'teams', label: 'Microsoft Teams', enabled: integrations.teams },
-    { key: 'serviceNow', label: 'ServiceNow', enabled: integrations.serviceNow },
-    { key: 'email', label: 'Email', enabled: integrations.email }
+    { key: 'serviceNow', label: 'ServiceNow', enabled: integrations.serviceNow }
+   ];
+
+  // Popular Integrations carousel data
+  const popularTools: { id: string; name: string; bg: string; pill: string, icon: any }[] = [
+    { id: 'teams', name: 'Microsoft Teams', bg: 'bg-[#D9B26B]', pill: 'M', icon: faMicrosoft },
+    { id: 'servicenow', name: 'ServiceNow', bg: 'bg-[#2b4f52]', pill: 'S',icon: faMicrosoft },
+    { id: 'slack', name: 'Slack', bg: 'bg-[#8FB299]', pill: 's',icon: faSlack },
+    { id: 'jira', name: 'Jira', bg: 'bg-[#4f7d61]', pill: 'J',icon: faJira },
+    { id: 'line', name: 'LINE', bg: 'bg-[#2c4a45]', pill: 'l',icon: faLine },
+    { id: 'github', name: 'GitHub', bg: 'bg-[#2b3b46]', pill: 'G',icon: faGithub },
+    { id: 'zoom', name: 'Zoom', bg: 'bg-[#2b4f52]', pill: 'Z',icon: faMicrosoft },
   ];
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollBy = (offset: number) => scrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -206,10 +216,8 @@ const AddProcess: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-between">
             <span>External Integrations</span>
-            <button className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium focus:outline-none" onClick={() => setShowAddIntegrationModal(true)}>
-              <FontAwesomeIcon icon={faPlus} className="w-4 h-4" />
-              <span>Add New</span>
-            </button>
+            <button onClick={() => setShowAddIntegrationModal(true)} className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">+ Add New Tool</button>
+            
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">Ingest logs and data directly from your favorite tools.</p>
           
@@ -217,23 +225,37 @@ const AddProcess: React.FC = () => {
             {integrationList.map((integration) => (
               <div key={integration.key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
                 <span className="text-gray-700 dark:text-gray-300">{integration.label}</span>
-                <button
-                  onClick={() => handleIntegrationToggle(integration.key)}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      integration.enabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                  <span
-                    className={`inline-block h-6 w-11 rounded-full transition-colors ${
-                      integration.enabled ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
-                  />
-                </button>
+                <FontAwesomeIcon icon={faTrash} className='text-gray-500 cursor-pointer inline-end' />
               </div>
             ))}
+          </div>
+
+          {/* Popular Integrations Carousel */}
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Popular Integrations</h3>
+            </div>
+            <div className="relative">
+              <button onClick={() => scrollBy(-240)} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center">
+                <FontAwesomeIcon icon={faChevronLeft} />
+              </button>
+              <div ref={scrollRef} className="overflow-x-auto no-scrollbar px-12">
+                <div className="flex gap-6 py-2">
+                  {popularTools.map(tool => (
+                    <div key={tool.id} className="flex flex-col items-center w-24">
+                      <div className={`w-20 h-20 rounded-xl ${tool.bg} flex items-center justify-center shadow-inner`}> 
+                        {/* <span className="text-white font-semibold text-lg">{tool.pill}</span> */}
+                        <FontAwesomeIcon icon={tool.icon} className='w-10 h-10 text-white' size='2x' />
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center leading-snug">{tool.name}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => scrollBy(240)} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center">
+                <FontAwesomeIcon icon={faChevronRight} />
+              </button>
+            </div>
           </div>
         </div>
 
