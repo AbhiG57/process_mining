@@ -1,87 +1,76 @@
 import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faUpload, 
+import {
+  faUpload,
   faVideo,
   faFileAlt,
   faImage,
   faBolt,
-  faPlus,faTrash,
-  faChevronLeft,
-  faChevronRight
+  faTrash,
+  faChevronLeft, faChevronRight,
+  faCog, faLink
 } from '@fortawesome/free-solid-svg-icons';
 import AddToolIntegrationModal from './AddToolIntegrationModal';
 import { faMicrosoft, faSlack, faJira, faGithub, faLine } from '@fortawesome/free-brands-svg-icons';
+
 interface Integrations {
   teams: boolean;
-  serviceNow: boolean;
-  email: boolean;
+  servicenow: boolean;
+  pam: boolean;
+  rawlogs: boolean;
 }
 
 interface Tab {
-  id: string;
+  key: string;
   label: string;
   icon: any;
 }
 
 interface Integration {
-  key: keyof Integrations;
+  key: string;
   label: string;
-  enabled: boolean;
+  icon: any;
+  status: 'connected' | 'not-connected' | 'sync-failed';
+  lastSynced?: string;
+  recordsFetched?: number;
+  filesFetched?: number;
 }
 
-const AddProcess: React.FC = () => {
+const dataSourceTabs: Tab[] = [
+  { key: 'video', label: 'Video', icon: faVideo },
+  { key: 'file', label: 'File', icon: faFileAlt },
+  { key: 'image', label: 'Image', icon: faImage },
+  { key: 'api', label: 'API', icon: faBolt },
+];
+
+const integrationList: Integration[] = [
+  {
+    key: 'servicenow',
+    label: 'ServiceNow',
+    icon: faBolt,
+    status: 'connected',
+    lastSynced: '2 hours ago',
+    recordsFetched: 1324
+  },
+  {
+    key: 'googledrive',
+    label: 'Google Drive',
+    icon: faBolt,
+    status: 'sync-failed',
+    filesFetched: 0
+  }
+];
+
+const AddProcess = () => {
   const [activeTab, setActiveTab] = useState<string>('video');
-  const [processName, setProcessName] = useState<string>('');
-  const [processDescription, setProcessDescription] = useState<string>('');
-  const [url, setUrl] = useState<string>('');
   const [integrations, setIntegrations] = useState<Integrations>({
     teams: false,
-    serviceNow: true,
-    email: false
+    servicenow: false,
+    pam: false,
+    rawlogs: false,
   });
   const [showAddIntegrationModal, setShowAddIntegrationModal] = useState(false);
-
-  const handleIntegrationToggle = (integration: keyof Integrations): void => {
-    setIntegrations(prev => ({
-      ...prev,
-      [integration]: !prev[integration]
-    }));
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    const files = event.target.files;
-    console.log('Files uploaded:', files);
-  };
-
-  const handleStartIngestion = (): void => {
-    console.log('Starting ingestion process...');
-  };
-
-  const handlePreviewLogs = (): void => {
-    console.log('Previewing logs...');
-  };
-
-  const handleReset = (): void => {
-    setProcessName('');
-    setProcessDescription('');
-    setUrl('');
-    setIntegrations({
-      teams: false,
-      serviceNow: true,
-      email: false
-    });
-  };
-
-  const tabs: Tab[] = [
-    { id: 'video', label: 'Video', icon: faVideo },
-    { id: 'documents', label: 'Documents', icon: faFileAlt },
-    { id: 'images', label: 'Images', icon: faImage }
-  ];
-
-  const integrationList: Integration[] = [
-    { key: 'serviceNow', label: 'ServiceNow', enabled: integrations.serviceNow }
-   ];
+  const [showServiceNowConfig, setShowServiceNowConfig] = useState(false);
 
   // Popular Integrations carousel data
   const popularTools: { id: string; name: string; bg: string; pill: string, icon: any }[] = [
@@ -94,140 +83,198 @@ const AddProcess: React.FC = () => {
     { id: 'zoom', name: 'Zoom', bg: 'bg-[#2b4f52]', pill: 'Z',icon: faMicrosoft },
   ];
   const scrollRef = useRef<HTMLDivElement>(null);
-  const scrollBy = (offset: number) => scrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log('File uploaded:', file.name);
+    }
+  };
+
+  const handleReset = (): void => {
+    setIntegrations({
+      teams: false,
+      servicenow: false,
+      pam: false,
+      rawlogs: false,
+    });
+  };
+
+  const handlePreviewLogs = (): void => {
+    console.log('Preview logs clicked');
+  };
+
+  const handleStartIngestion = (): void => {
+    console.log('Start ingestion clicked');
+  };
+
+  const scrollLeft = (): void => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = (): void => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
+
+  const getStatusConfig = (status: Integration['status']) => {
+    switch (status) {
+      case 'connected':
+        return {
+          label: 'Connected',
+          color: 'text-green-500',
+          bg: 'bg-green-500',
+          icon: '●'
+        };
+      case 'not-connected':
+        return {
+          label: 'Not connected',
+          color: 'text-gray-500',
+          bg: 'bg-gray-500',
+          icon: '●'
+        };
+      case 'sync-failed':
+        return {
+          label: 'Sync failed',
+          color: 'text-red-500',
+          bg: 'bg-red-500',
+          icon: '●'
+        };
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Data Ingestion Module</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Configure and start a new data ingestion process.</p>
-      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Add Process</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Configure data ingestion for process mining</p>
+        </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
-        {/* Process Details Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        {/* Process Details */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Process Details</h2>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Process Name
-              </label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Process Name</label>
               <input
                 type="text"
-                value={processName}
-                onChange={(e) => setProcessName(e.target.value)}
-                placeholder="e.g., Quarterly Financials Analysis"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter process name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Process Description
-              </label>
-              <textarea
-                value={processDescription}
-                onChange={(e) => setProcessDescription(e.target.value)}
-                placeholder="Describe the purpose of this data ingestion process."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter description"
               />
             </div>
           </div>
         </div>
 
-        {/* Data Sources Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        {/* Data Sources */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Data Sources</h2>
-          
-          {/* Upload Files */}
-          <div className="mb-6">
-            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Upload Files</h3>
-            
-            {/* Tabs */}
-            <div className="flex space-x-1 mb-4">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <FontAwesomeIcon icon={tab.icon} className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* File Upload Area */}
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
-              <FontAwesomeIcon icon={faUpload} className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400 mb-2">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-                {activeTab === 'video' && 'MP4, AVI, MOV (max. 500MB)'}
-                {activeTab === 'documents' && 'PDF, DOC, DOCX (max. 100MB)'}
-                {activeTab === 'images' && 'JPG, PNG, GIF (max. 50MB)'}
-              </p>
-              <input
-                type="file"
-                multiple
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-                accept={
-                  activeTab === 'video' ? 'video/*' :
-                  activeTab === 'documents' ? '.pdf,.doc,.docx' :
-                  'image/*'
-                }
-              />
-              <label
-                htmlFor="file-upload"
-                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors cursor-pointer"
+          <div className="flex space-x-4 mb-4">
+            {dataSourceTabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === tab.key
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
               >
-                Browse Files
-              </label>
-            </div>
+                <FontAwesomeIcon icon={tab.icon} className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
+            ))}
           </div>
-
-          {/* Fetch from URL */}
-          <div>
-            <h3 className="text-md font-medium text-gray-700 dark:text-gray-300 mb-3">Fetch from URL</h3>
-            <div className="relative">
-              <FontAwesomeIcon 
-                icon={faBolt} 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" 
-              />
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com/data.json"
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+            <FontAwesomeIcon icon={faUpload} className="w-8 h-8 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Drag and drop files here or click to browse</p>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="file-upload"
+            />
+            <label
+              htmlFor="file-upload"
+              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 cursor-pointer transition-colors"
+            >
+              Choose Files
+            </label>
           </div>
         </div>
 
-        {/* External Integrations Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        {/* External Integrations */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center justify-between">
             <span>External Integrations</span>
             <button onClick={() => setShowAddIntegrationModal(true)} className="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold">+ Add New Tool</button>
-            
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-4">Ingest logs and data directly from your favorite tools.</p>
-          
+
+          {/* Integration Status Cards */}
           <div className="space-y-4">
-            {integrationList.map((integration) => (
-              <div key={integration.key} className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                <span className="text-gray-700 dark:text-gray-300">{integration.label}</span>
-                <FontAwesomeIcon icon={faTrash} className='text-gray-500 cursor-pointer inline-end' />
-              </div>
-            ))}
+            {integrationList.map((integration) => {
+              const statusConfig = getStatusConfig(integration.status);
+              return (
+                <div key={integration.key} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <FontAwesomeIcon icon={integration.icon} className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{integration.label}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`inline-flex items-center gap-1 text-sm ${statusConfig.color}`}>
+                          <span className={statusConfig.bg}>●</span>
+                          {statusConfig.label}
+                        </span>
+                        {integration.lastSynced && (
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Last synced: {integration.lastSynced}
+                          </span>
+                        )}
+                        {integration.recordsFetched !== undefined && (
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Records fetched: {integration.recordsFetched.toLocaleString()}
+                          </span>
+                        )}
+                        {integration.filesFetched !== undefined && (
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {integration.filesFetched} files fetched
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {integration.status === 'not-connected' || integration.status === 'sync-failed' ? (
+                      <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors">
+                        <FontAwesomeIcon icon={faLink} className="w-3 h-3" />
+                        Connect
+                      </button>
+                    ) : null}
+                    <button className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                      <FontAwesomeIcon icon={faCog} className="w-4 h-4" />
+                    </button>
+                    <button className="p-2 text-gray-500 hover:text-red-600 transition-colors">
+                      <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Popular Integrations Carousel */}
@@ -236,24 +283,21 @@ const AddProcess: React.FC = () => {
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Popular Integrations</h3>
             </div>
             <div className="relative">
-              <button onClick={() => scrollBy(-240)} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center">
-                <FontAwesomeIcon icon={faChevronLeft} />
+              <button onClick={scrollLeft} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 p-2 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none">
+                <FontAwesomeIcon icon={faChevronLeft} className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               </button>
-              <div ref={scrollRef} className="overflow-x-auto no-scrollbar px-12">
-                <div className="flex gap-6 py-2">
-                  {popularTools.map(tool => (
-                    <div key={tool.id} className="flex flex-col items-center w-24">
-                      <div className={`w-20 h-20 rounded-xl ${tool.bg} flex items-center justify-center shadow-inner`}> 
-                        {/* <span className="text-white font-semibold text-lg">{tool.pill}</span> */}
-                        <FontAwesomeIcon icon={tool.icon} className='w-10 h-10 text-white' size='2x' />
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center leading-snug">{tool.name}</div>
+              <div ref={scrollRef} className="flex gap-6 py-2 overflow-x-auto scrollbar-hide">
+                {popularTools.map(tool => (
+                  <div key={tool.id} className="flex flex-col items-center w-24" onClick={() => {setShowServiceNowConfig(true);setShowAddIntegrationModal(true)}}>
+                    <div className={`w-20 h-20 rounded-xl ${tool.bg} flex items-center justify-center shadow-inner`}> 
+                      <FontAwesomeIcon icon={tool.icon} className='w-10 h-10 text-white' size='2x' />
                     </div>
-                  ))}
-                </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center leading-snug">{tool.name}</div>
+                  </div>
+                ))}
               </div>
-              <button onClick={() => scrollBy(240)} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/30 hover:bg-black/40 text-white w-9 h-9 rounded-full flex items-center justify-center">
-                <FontAwesomeIcon icon={faChevronRight} />
+              <button onClick={scrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 p-2 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none">
+                <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               </button>
             </div>
           </div>
@@ -281,7 +325,7 @@ const AddProcess: React.FC = () => {
           </button>
         </div>
       </div>
-      <AddToolIntegrationModal open={showAddIntegrationModal} onClose={() => setShowAddIntegrationModal(false)} />
+      <AddToolIntegrationModal openConfig={showServiceNowConfig} open={showAddIntegrationModal} onClose={() => setShowAddIntegrationModal(false)} />
     </div>
   );
 };

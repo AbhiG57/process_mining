@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faCheck, faPlus } from '@fortawesome/free-solid-svg-icons';
 import ServiceNowConfigTabs from './ServiceNowConfigTabs';
@@ -52,12 +52,19 @@ const categories = ['All', 'Communication', 'ITSM', 'Logs', 'APIs'];
 interface AddToolIntegrationModalProps {
   open: boolean;
   onClose: () => void;
+  openConfig?: boolean;
 }
 
-const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open, onClose }) => {
+const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open, onClose, openConfig }) => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [showServiceNowConfig, setShowServiceNowConfig] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setShowServiceNowConfig(!!openConfig);
+    }
+  }, [open, openConfig]);
 
   const filtered = mockIntegrations.filter((integration) => {
     const matchesCategory = activeCategory === 'All' || integration.category === activeCategory;
