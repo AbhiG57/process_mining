@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faCheck, faPlus } from '@fortawesome/free-solid-svg-icons';
 import ServiceNowConfigTabs from './ServiceNowConfigTabs';
+import GoogleDriveConfigTabs from './GoogleDriveConfigTabs';
 
 interface Integration {
   id: string;
@@ -26,6 +27,14 @@ const mockIntegrations: Integration[] = [
     name: 'ServiceNow',
     description: 'Ingest incident, problem, and change data to correlate with other signals.',
     icon: <div className="w-10 h-10 rounded bg-[#F6C343] flex items-center justify-center text-white font-bold text-lg">S</div>,
+    category: 'ITSM',
+    added: true,
+  },
+  {
+    id: 'googleDrive',
+    name: 'Google Drive',
+    description: 'Ingest incident, problem, and change data to correlate with other signals.',
+    icon: <div className="w-10 h-10 rounded bg-[#F6C343] flex items-center justify-center text-white font-bold text-lg">G</div>,
     category: 'ITSM',
     added: true,
   },
@@ -55,14 +64,16 @@ interface AddToolIntegrationModalProps {
   openConfig?: boolean;
 }
 
+type ActiveConfig = 'servicenow' | 'googleDrive' | null;
+
 const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open, onClose, openConfig }) => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [showServiceNowConfig, setShowServiceNowConfig] = useState(false);
+  const [activeConfig, setActiveConfig] = useState<ActiveConfig>(null);
 
   useEffect(() => {
     if (open) {
-      setShowServiceNowConfig(!!openConfig);
+      setActiveConfig(openConfig ? 'servicenow' : null);
     }
   }, [open, openConfig]);
 
@@ -76,8 +87,10 @@ const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-      {showServiceNowConfig ? (
-        <ServiceNowConfigTabs onBack={() => setShowServiceNowConfig(false)} />
+      {activeConfig === 'servicenow' ? (
+        <ServiceNowConfigTabs onBack={() => setActiveConfig(null)} />
+      ) : activeConfig === 'googleDrive' ? (
+        <GoogleDriveConfigTabs onBack={() => setActiveConfig(null)} />
       ) : (
         <div className="bg-[#181C23] text-white max-w-2xl w-full rounded-xl shadow-lg overflow-hidden">
           <div className="px-8 pt-8 pb-2">
@@ -119,10 +132,10 @@ const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open,
                     <div className="text-gray-400 text-sm mt-1">{integration.description}</div>
                   </div>
                 </div>
-                {integration.id === 'servicenow' ? (
+                {integration.id === 'servicenow' || integration.id === 'googleDrive' ? (
                   <button
                     className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors bg-blue-600 hover:bg-blue-700 text-white`}
-                    onClick={() => setShowServiceNowConfig(true)}
+                    onClick={() => setActiveConfig(integration.id as ActiveConfig)}
                   >
                     Configure
                   </button>

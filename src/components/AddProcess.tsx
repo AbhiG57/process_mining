@@ -11,7 +11,7 @@ import {
   faCog, faLink
 } from '@fortawesome/free-solid-svg-icons';
 import AddToolIntegrationModal from './AddToolIntegrationModal';
-import { faMicrosoft, faSlack, faJira, faGithub, faLine } from '@fortawesome/free-brands-svg-icons';
+import { faMicrosoft, faSlack, faJira, faGithub, faLine, faGoogleDrive } from '@fortawesome/free-brands-svg-icons';
 
 interface Integrations {
   teams: boolean;
@@ -77,6 +77,7 @@ const AddProcess = () => {
     { id: 'teams', name: 'Microsoft Teams', bg: 'bg-[#D9B26B]', pill: 'M', icon: faMicrosoft },
     { id: 'servicenow', name: 'ServiceNow', bg: 'bg-[#2b4f52]', pill: 'S',icon: faMicrosoft },
     { id: 'slack', name: 'Slack', bg: 'bg-[#8FB299]', pill: 's',icon: faSlack },
+    { id: 'googleDrive', name: 'Google Drive', bg: 'bg-[#2b4f52]', pill: 'G',icon: faGoogleDrive },
     { id: 'jira', name: 'Jira', bg: 'bg-[#4f7d61]', pill: 'J',icon: faJira },
     { id: 'line', name: 'LINE', bg: 'bg-[#2c4a45]', pill: 'l',icon: faLine },
     { id: 'github', name: 'GitHub', bg: 'bg-[#2b3b46]', pill: 'G',icon: faGithub },
