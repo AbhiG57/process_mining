@@ -61,21 +61,29 @@ const categories = ['All', 'Communication', 'ITSM', 'Logs', 'APIs'];
 interface AddToolIntegrationModalProps {
   open: boolean;
   onClose: () => void;
-  openConfig?: boolean;
+  selectedTool?: string | null;
 }
 
 type ActiveConfig = 'servicenow' | 'googleDrive' | null;
 
-const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open, onClose, openConfig }) => {
+const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open, onClose, selectedTool }) => {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeConfig, setActiveConfig] = useState<ActiveConfig>(null);
 
   useEffect(() => {
     if (open) {
-      setActiveConfig(openConfig ? 'servicenow' : null);
+      if (selectedTool === 'servicenow') {
+        setActiveConfig('servicenow');
+      } else if (selectedTool === 'googleDrive') {
+        setActiveConfig('googleDrive');
+      } else {
+        setActiveConfig(null);
+      }
+    } else {
+      setActiveConfig(null);
     }
-  }, [open, openConfig]);
+  }, [open, selectedTool]);
 
   const filtered = mockIntegrations.filter((integration) => {
     const matchesCategory = activeCategory === 'All' || integration.category === activeCategory;
@@ -92,11 +100,11 @@ const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open,
       ) : activeConfig === 'googleDrive' ? (
         <GoogleDriveConfigTabs onBack={() => setActiveConfig(null)} />
       ) : (
-        <div className="bg-[#181C23] text-white max-w-2xl w-full rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white max-w-2xl w-full rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <div className="px-8 pt-8 pb-2">
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">Add Tool Integration</div>
-              <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl font-bold focus:outline-none">×</button>
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl font-bold focus:outline-none">×</button>
             </div>
           </div>
           <div className="px-8 pb-2">
@@ -107,14 +115,14 @@ const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open,
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search tools..."
-                className="w-full pl-10 pr-3 py-2 rounded-lg bg-[#23272F] text-white placeholder-gray-400 border-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            <div className="flex gap-6 mb-4 border-b border-[#23272F]">
+            <div className="flex gap-6 mb-4 border-b border-gray-200 dark:border-gray-700">
               {categories.map(cat => (
                 <button
                   key={cat}
-                  className={`pb-2 text-sm font-medium border-b-2 transition-colors ${activeCategory === cat ? 'border-blue-500 text-white' : 'border-transparent text-gray-400 hover:text-white'}`}
+                  className={`pb-2 text-sm font-medium border-b-2 transition-colors ${activeCategory === cat ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                   onClick={() => setActiveCategory(cat)}
                 >
                   {cat}
@@ -124,12 +132,12 @@ const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open,
           </div>
           <div className="px-8 pb-8 max-h-[340px] overflow-y-auto">
             {filtered.map(integration => (
-              <div key={integration.id} className="flex items-center justify-between py-4 border-b border-[#23272F] last:border-b-0">
+              <div key={integration.id} className="flex items-center justify-between py-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
                 <div className="flex items-center gap-4">
                   {integration.icon}
                   <div>
-                    <div className="font-semibold text-base text-white">{integration.name}</div>
-                    <div className="text-gray-400 text-sm mt-1">{integration.description}</div>
+                    <div className="font-semibold text-base text-gray-900 dark:text-white">{integration.name}</div>
+                    <div className="text-gray-600 dark:text-gray-400 text-sm mt-1">{integration.description}</div>
                   </div>
                 </div>
                 {integration.id === 'servicenow' || integration.id === 'googleDrive' ? (
@@ -141,7 +149,7 @@ const AddToolIntegrationModal: React.FC<AddToolIntegrationModalProps> = ({ open,
                   </button>
                 ) : (
                   <button
-                    className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors ${integration.added ? 'bg-[#23272F] text-gray-400 cursor-default' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                    className={`px-5 py-1.5 rounded-lg text-sm font-semibold transition-colors ${integration.added ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-default' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
                     disabled={integration.added}
                   >
                     {integration.added ? (

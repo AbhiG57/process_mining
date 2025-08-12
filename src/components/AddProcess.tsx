@@ -8,7 +8,7 @@ import {
   faBolt,
   faTrash,
   faChevronLeft, faChevronRight,
-  faCog, faLink
+  faCog, faLink, faCloud, faSquare
 } from '@fortawesome/free-solid-svg-icons';
 import AddToolIntegrationModal from './AddToolIntegrationModal';
 import { faMicrosoft, faSlack, faJira, faGithub, faLine, faGoogleDrive } from '@fortawesome/free-brands-svg-icons';
@@ -70,7 +70,7 @@ const AddProcess = () => {
     rawlogs: false,
   });
   const [showAddIntegrationModal, setShowAddIntegrationModal] = useState(false);
-  const [showServiceNowConfig, setShowServiceNowConfig] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
 
   // Popular Integrations carousel data
   const popularTools: { id: string; name: string; bg: string; pill: string, icon: any }[] = [
@@ -107,6 +107,11 @@ const AddProcess = () => {
 
   const handleStartIngestion = (): void => {
     console.log('Start ingestion clicked');
+  };
+
+  const handleCloseModal = () => {
+    setShowAddIntegrationModal(false);
+    setSelectedTool(null);
   };
 
   const scrollLeft = (): void => {
@@ -289,7 +294,10 @@ const AddProcess = () => {
               </button>
               <div ref={scrollRef} className="flex gap-6 py-2 overflow-x-auto scrollbar-hide">
                 {popularTools.map(tool => (
-                  <div key={tool.id} className="flex flex-col items-center w-24" onClick={() => {setShowServiceNowConfig(true);setShowAddIntegrationModal(true)}}>
+                  <div key={tool.id} className="flex flex-col items-center w-24" onClick={() => {
+                    setSelectedTool(tool.id);
+                    setShowAddIntegrationModal(true);
+                  }}>
                     <div className={`w-20 h-20 rounded-xl ${tool.bg} flex items-center justify-center shadow-inner`}> 
                       <FontAwesomeIcon icon={tool.icon} className='w-10 h-10 text-white' size='2x' />
                     </div>
@@ -300,6 +308,83 @@ const AddProcess = () => {
               <button onClick={scrollRight} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white dark:bg-gray-800 p-2 rounded-full shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none">
                 <FontAwesomeIcon icon={faChevronRight} className="w-4 h-4 text-gray-700 dark:text-gray-300" />
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Review Input Data */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Review Input Data</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">Review and verify the data files that will be processed for mining.</p>
+          
+          <div className="flex gap-6">
+            {/* Left Pane - File List */}
+            <div className="w-1/3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Review Your Data</h3>
+              <div className="space-y-2">
+                {[
+                  { name: 'Incident_Report.pdf', type: 'pdf', size: '2.1 MB', date: 'Aug 11, 2025', selected: true, icon: 'cloud' },
+                  { name: 'Quarterly_Assets.xlsx', type: 'excel', size: '1.8 MB', date: 'Aug 10, 2025', selected: false, icon: 'square' },
+                  { name: 'Change_Requests.docx', type: 'word', size: '3.2 MB', date: 'Aug 9, 2025', selected: false, icon: 'cloud' },
+                  { name: 'Problem_Tickets.pptx', type: 'powerpoint', size: '4.5 MB', date: 'Aug 8, 2025', selected: false, icon: 'cloud' },
+                  { name: 'Config_Items.csv', type: 'csv', size: '0.9 MB', date: 'Aug 7, 2025', selected: false, icon: 'cloud' }
+                ].map((file, index) => (
+                  <div 
+                    key={index}
+                    className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                      file.selected 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500' 
+                        : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {/* File Type Icon */}
+                    <div className={`w-8 h-8 rounded flex items-center justify-center text-white text-xs font-semibold ${
+                      file.type === 'pdf' ? 'bg-red-500' :
+                      file.type === 'excel' ? 'bg-green-500' :
+                      file.type === 'word' ? 'bg-blue-500' :
+                      file.type === 'powerpoint' ? 'bg-orange-500' :
+                      'bg-gray-400'
+                    }`}>
+                      {file.type === 'pdf' ? 'PDF' :
+                       file.type === 'excel' ? 'XL' :
+                       file.type === 'word' ? 'WD' :
+                       file.type === 'powerpoint' ? 'PP' :
+                       'CSV'}
+                    </div>
+                    
+                    {/* File Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-gray-900 dark:text-white truncate">{file.name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{file.size} • {file.date}</div>
+                    </div>
+                    
+                    {/* Status Icon */}
+                    <div className="text-gray-400 dark:text-gray-500">
+                      {file.icon === 'cloud' ? (
+                        <FontAwesomeIcon icon={faCloud} className="w-4 h-4" />
+                      ) : file.icon === 'square' ? (
+                        <FontAwesomeIcon icon={faSquare} className="w-4 h-4" />
+                      ) : (
+                        <FontAwesomeIcon icon={faCloud} className="w-4 h-4" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Right Pane - Preview */}
+            <div className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <div className="text-center text-gray-500 dark:text-gray-400">
+                <div className="space-y-3 mb-4">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-2/3 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/3 mx-auto"></div>
+                </div>
+                <div className="h-32 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
+                <div className="text-xs mt-4">Only the first page is shown in preview. Full document can be accessed via source.</div>
+              </div>
             </div>
           </div>
         </div>
@@ -326,7 +411,11 @@ const AddProcess = () => {
           </button>
         </div>
       </div>
-      <AddToolIntegrationModal openConfig={showServiceNowConfig} open={showAddIntegrationModal} onClose={() => setShowAddIntegrationModal(false)} />
+      <AddToolIntegrationModal 
+        open={showAddIntegrationModal} 
+        onClose={handleCloseModal}
+        selectedTool={selectedTool}
+      />
     </div>
   );
 };
