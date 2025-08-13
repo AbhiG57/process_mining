@@ -15,6 +15,7 @@ import TicketFlow from './components/TicketFlow'
 import TicketListing from './components/TicketListing'
 import Dashboard from './components/Dashboard'
 import Report from './components/Report'
+import ProcessDetails from './components/ProcessDetails'
 
 function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -37,7 +38,7 @@ function App() {
         <Route path='/' element={<Dashboard/>} />
         <Route path="/about" element={<About />} />
         <Route path="/process" element={<ProcessListing />} />
-        <Route path="/process/:id" element={<ProcessTaskSteps />} />
+        <Route path="/process/:id" element={<ProcessDetails />} />
         <Route path="/createProcess" element={<AddProcess/>}/>
         <Route path="/addProcess" element={<AddProcess/>}/>
         <Route path="/orchestration/:id" element={<Orchestration />} />
