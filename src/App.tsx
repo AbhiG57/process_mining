@@ -16,6 +16,7 @@ import TicketListing from './components/TicketListing'
 import Dashboard from './components/Dashboard'
 import Report from './components/Report'
 import ProcessDetails from './components/ProcessDetails'
+import ProcessListingNew from './components/ProcessListingNew'
 
 function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -37,7 +38,7 @@ function App() {
       <Routes>
         <Route path='/' element={<Dashboard/>} />
         <Route path="/about" element={<About />} />
-        <Route path="/process" element={<ProcessListing />} />
+        <Route path="/process" element={<ProcessListingNew />} />
         <Route path="/process/:id" element={<ProcessDetails />} />
         <Route path="/createProcess" element={<AddProcess/>}/>
         <Route path="/addProcess" element={<AddProcess/>}/>
