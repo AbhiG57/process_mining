@@ -1,6 +1,6 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faHeadset, faEnvelope, faUsers, faPlus, faFile, faFileImage, faFileVideo, faFilePdf, faTimes, faCheck, faExclamationTriangle, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faHeadset, faEnvelope, faUsers, faPlus, faLaptop, faTimes, faCheck, faExclamationTriangle, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 
 interface DataSourceTab {
@@ -32,7 +32,7 @@ const ACCEPTED_FILE_TYPES: AcceptedFileTypes = {
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
-export default function CreateProcess(): JSX.Element {
+export default function CreateProcess() {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -136,13 +136,8 @@ export default function CreateProcess(): JSX.Element {
   };
 
   const getFileIcon = (): any => {
-    if (!file) return faFile;
-    
-    if (file.type.startsWith('image/')) return faFileImage;
-    if (file.type.startsWith('video/')) return faFileVideo;
-    if (file.type === 'application/pdf') return faFilePdf;
-    
-    return faFile;
+    // Always return laptop icon for local files
+    return faLaptop;
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -153,7 +148,7 @@ export default function CreateProcess(): JSX.Element {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -165,18 +160,45 @@ export default function CreateProcess(): JSX.Element {
       alert('Please either upload a file or provide a data source URL');
       return;
     }
-    
-    // Here you would typically send the data to your backend
-    console.log('Creating process:', {
-      title,
-      description,
-      dataSourceUrl,
-      tags,
-      file: file?.name
-    });
-    
-    // Navigate to the process listing page
-    navigate('/process');
+
+    // Show ingestion confirmation
+    const confirmIngestion = window.confirm('Start data ingestion process?');
+    if (!confirmIngestion) return;
+
+    // Create new process object with exact structure matching ProcessListing
+    const newProcess = {
+      id: Date.now(),
+      created: new Date().toISOString().split('T')[0],
+      transcription: '0/3',
+      status: 'IN PROGRESS',
+      statusColor: 'bg-blue-600',
+      title: title.trim(),
+      description: description.trim() || `Process created from ${file ? 'local file upload' : 'data source URL'}.`,
+    };
+
+    try {
+      // Get existing processes from localStorage
+      const existingProcesses = JSON.parse(localStorage.getItem('processes') || '[]');
+      
+      // Add new process to the list
+      const updatedProcesses = [...existingProcesses, newProcess];
+      
+      // Save to localStorage
+      localStorage.setItem('processes', JSON.stringify(updatedProcesses));
+
+      // Show success message
+      alert('Ingestion process started successfully!');
+      
+      // Debug: Log the saved process
+      console.log('New process saved:', newProcess);
+      console.log('All processes in localStorage:', updatedProcesses);
+      
+      // Navigate to the process listing page
+      navigate('/process');
+    } catch (error) {
+      console.error('Error saving process:', error);
+      alert('Failed to start ingestion process. Please try again.');
+    }
   };
 
   const handleDragOver = (e: React.DragEvent): void => {

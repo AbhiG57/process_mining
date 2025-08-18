@@ -12,6 +12,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import AddToolIntegrationModal from './AddToolIntegrationModal';
 import { faMicrosoft, faSlack, faJira, faGithub, faLine, faGoogleDrive } from '@fortawesome/free-brands-svg-icons';
+import { useNavigate } from 'react-router-dom';
 
 interface Integrations {
   teams: boolean;
@@ -47,8 +48,7 @@ interface UploadedFile {
 const dataSourceTabs: Tab[] = [
   { key: 'video', label: 'Video', icon: faVideo },
   { key: 'file', label: 'File', icon: faFileAlt },
-  { key: 'image', label: 'Image', icon: faImage },
-  { key: 'api', label: 'API', icon: faBolt },
+  { key: 'image', label: 'Image', icon: faImage }
 ];
 
 const integrationList: Integration[] = [
@@ -70,6 +70,7 @@ const integrationList: Integration[] = [
 ];
 
 const AddProcess = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('video');
   const [integrations, setIntegrations] = useState<Integrations>({
     teams: false,
@@ -84,6 +85,10 @@ const AddProcess = () => {
   const [draggedItem, setDraggedItem] = useState<string | null>(null);
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<UploadedFile | null>(null);
   const [currentStep, setCurrentStep] = useState<'setup' | 'review'>('setup');
+  
+  // Add process details state
+  const [processName, setProcessName] = useState<string>('');
+  const [processDescription, setProcessDescription] = useState<string>('');
 
   // Popular Integrations carousel data
   const popularTools: { id: string; name: string; bg: string; pill: string, icon: any }[] = [
@@ -309,6 +314,11 @@ const AddProcess = () => {
   };
 
   const handleNext = (): void => {
+    if (!processName.trim()) {
+      alert('Please enter a process name before proceeding.');
+      return;
+    }
+    
     if (uploadedFiles.length > 0) {
       setCurrentStep('review');
     } else {
@@ -328,9 +338,51 @@ const AddProcess = () => {
   };
 
   const handleStartIngestion = (): void => {
-    console.log('Starting ingestion with files:', uploadedFiles);
-    // Here you would typically start the ingestion process
-    alert('Data ingestion started successfully!');
+    // Validate required fields
+    if (!processName.trim()) {
+      alert('Please enter a process name');
+      return;
+    }
+    
+    if (uploadedFiles.length === 0) {
+      alert('Please upload at least one file before starting ingestion');
+      return;
+    }
+
+    // Create new process object
+    const newProcess = {
+      id: Date.now(),
+      created: new Date().toISOString().split('T')[0],
+      transcription: '0/3',
+      status: 'IN PROGRESS',
+      statusColor: 'bg-blue-600',
+      title: processName.trim(),
+      description: processDescription.trim() || `Process created from ${uploadedFiles.length} uploaded file(s).`,
+    };
+
+    try {
+      // Get existing processes from localStorage
+      const existingProcesses = JSON.parse(localStorage.getItem('processes') || '[]');
+      
+      // Add new process to the list
+      const updatedProcesses = [...existingProcesses, newProcess];
+      
+      // Save to localStorage
+      localStorage.setItem('processes', JSON.stringify(updatedProcesses));
+
+      // Show success message
+      alert('Data ingestion started successfully!');
+      
+      // Debug: Log the saved process
+      console.log('New process saved:', newProcess);
+      console.log('All processes in localStorage:', updatedProcesses);
+      
+      // Navigate to the process listing page
+      navigate('/process');
+    } catch (error) {
+      console.error('Error saving process:', error);
+      alert('Failed to start ingestion process. Please try again.');
+    }
   };
 
   const handleSettingsClick = (integrationKey: string): void => {
@@ -399,6 +451,8 @@ const AddProcess = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Process Name</label>
               <input
                 type="text"
+                value={processName}
+                onChange={(e) => setProcessName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter process name"
               />
@@ -407,6 +461,8 @@ const AddProcess = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
               <input
                 type="text"
+                value={processDescription}
+                onChange={(e) => setProcessDescription(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter description"
               />
@@ -620,14 +676,17 @@ const AddProcess = () => {
             <div className="flex gap-8">
               {/* Left Pane - File List */}
               <div className="w-2/5">
-                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
-                  <FontAwesomeIcon icon={faGripVertical} className="w-4 h-4 text-gray-400" />
-                  Review Your Data
-                  <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    (Drag to reorder)
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                    <FontAwesomeIcon icon={faGripVertical} className="w-4 h-4 text-gray-400" />
+                    Review Your Data
+                  </h3>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                    {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''}
                   </span>
-                </h3>
-                <div className="space-y-3">
+                </div>
+                
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {uploadedFiles.length > 0 ? (
                     uploadedFiles.map((file, index) => (
                       <div 
@@ -644,13 +703,13 @@ const AddProcess = () => {
                           'hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500'
                         }`}
                       >
-                        {/* Drag Handle */}
-                        <div className="text-gray-400 dark:text-gray-500 cursor-move hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
-                          <FontAwesomeIcon icon={faGripVertical} className="w-5 h-5" />
+                        {/* File Order Number */}
+                        <div className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300">
+                          {index + 1}
                         </div>
                         
-                        {/* File Type Icon */}
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-sm font-bold ${
+                        {/* File Type Icon with Better Colors */}
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
                           file.type.startsWith('video/') ? 'bg-purple-500' :
                           file.type.startsWith('image/') ? 'bg-green-500' :
                           file.type.includes('pdf') ? 'bg-red-500' :
@@ -666,15 +725,20 @@ const AddProcess = () => {
                            'FILE'}
                         </div>
                         
-                        {/* File Info */}
+                        {/* File Info - More Compact */}
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 dark:text-white truncate text-base">{file.name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">{formatFileSize(file.size)}</div>
+                          <div className="font-semibold text-gray-900 dark:text-white truncate text-sm">{file.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
+                            <span>{formatFileSize(file.size)}</span>
+                            <span className="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full"></span>
+                            <span className="capitalize">{file.type.split('/')[0]}</span>
+                          </div>
                         </div>
                         
-                        {/* Status Icon */}
-                        <div className="text-gray-400 dark:text-gray-500">
-                          <FontAwesomeIcon icon={faCloud} className="w-4 h-4" />
+                        {/* Status Indicator */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">Ready</span>
                         </div>
 
                         {/* Delete Button */}
@@ -698,6 +762,30 @@ const AddProcess = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* File Processing Summary */}
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Processing Summary</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Ready for ingestion</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">Total files:</span>
+                        <span className="font-medium">{uploadedFiles.length}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600 dark:text-gray-400">Total size:</span>
+                        <span className="font-medium">
+                          {uploadedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024) < 1 ? 
+                            `${(uploadedFiles.reduce((acc, file) => acc + file.size, 0) / 1024).toFixed(1)} KB` : 
+                            `${(uploadedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(1)} MB`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Right Pane - Preview */}
@@ -705,9 +793,14 @@ const AddProcess = () => {
                 {selectedFileForPreview ? (
                   <div className="h-full">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                        Preview: {selectedFileForPreview.name}
-                      </h4>
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+                          {selectedFileForPreview.name}
+                        </h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          {formatFileSize(selectedFileForPreview.size)} • {selectedFileForPreview.type}
+                        </p>
+                      </div>
                       <button
                         onClick={() => setSelectedFileForPreview(null)}
                         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
@@ -715,7 +808,7 @@ const AddProcess = () => {
                         <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="h-[calc(100%-3rem)]">
+                    <div className="h-[calc(100%-4rem)] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
                       {renderFilePreview(selectedFileForPreview)}
                     </div>
                   </div>
@@ -735,29 +828,32 @@ const AddProcess = () => {
               </div>
             </div>
 
-            {/* Review Action Buttons */}
+            {/* Review Action Buttons - Streamlined */}
             <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={handleBack}
-                className="px-8 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                className="px-6 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium flex items-center gap-2"
               >
-                Back
+                <FontAwesomeIcon icon={faChevronLeft} className="w-4 h-4" />
+                Back to Setup
               </button>
-              <div className="flex space-x-4">
+              
+              <div className="flex space-x-3">
                 <button
                   onClick={handleSave}
-                  className="px-8 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                  className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
                 >
-                  Save
-          </button>
-          <button
-            onClick={handleStartIngestion}
-                  className="px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-          >
-            Start Ingestion
-          </button>
-        </div>
-      </div>
+                  Save Configuration
+                </button>
+                <button
+                  onClick={handleStartIngestion}
+                  className="px-8 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+                >
+                  <FontAwesomeIcon icon={faBolt} className="w-4 h-4" />
+                  Start Ingestion
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

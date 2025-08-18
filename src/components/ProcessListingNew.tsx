@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faCopy, faTrash, faPlus, faCheck, faEye, faSearch } from '@fortawesome/free-solid-svg-icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface Process {
   id: number;
@@ -79,13 +79,16 @@ const recentActivities = [
 
 function ProcessListingNew() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [processes, setProcesses] = useState<Process[]>(defaultProcesses);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
-  useEffect(() => {
-    // Load additional processes from localStorage on component mount
+  // Function to load processes from localStorage
+  const loadProcesses = () => {
     const storedProcesses: Process[] = JSON.parse(localStorage.getItem('processes') || '[]');
+    console.log('Loading processes from localStorage:', storedProcesses);
+    
     // Combine default processes with stored processes, avoiding duplicates
     const combinedProcesses = [...defaultProcesses];
     storedProcesses.forEach(storedProcess => {
@@ -93,8 +96,42 @@ function ProcessListingNew() {
         combinedProcesses.push(storedProcess);
       }
     });
+    
+    console.log('Combined processes:', combinedProcesses);
     setProcesses(combinedProcesses);
+  };
+
+  useEffect(() => {
+    // Load processes on component mount
+    loadProcesses();
+
+    // Listen for storage changes to refresh processes when localStorage is updated
+    const handleStorageChange = () => {
+      loadProcesses();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also refresh when the component becomes visible (for navigation from other pages)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadProcesses();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
+
+  // Refresh processes when navigating to this page
+  useEffect(() => {
+    console.log('Location changed, refreshing processes...');
+    loadProcesses();
+  }, [location.pathname]);
 
   const handleDeleteProcess = (processId: number): void => {
     // Only allow deletion of non-default processes
