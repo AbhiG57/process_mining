@@ -161,11 +161,11 @@ function ProcessListingNew() {
   return (
     <div className="min-h-screen bg-[#1A1D2B] text-white px-6 py-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Processes</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Processes</h1>
         <button 
           onClick={() => navigate(`/createProcess`)} 
-          className="flex items-center gap-2 bg-[#6B48FF] hover:bg-[#5A3FE8] text-white font-medium px-3 py-2 rounded text-sm transition-colors"
+          className="flex items-center gap-2 bg-[#6B48FF] hover:bg-[#5A3FE8] text-white font-medium px-2 py-1 rounded text-sm transition-colors"
         >
           <FontAwesomeIcon icon={faPlus} className="text-xs" />
           Create Process

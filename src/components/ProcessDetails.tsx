@@ -13,9 +13,12 @@ import {
   faShare,
   faEllipsisV,
   faUser,
-  faClock
+  faClock,
+  faCode
 } from '@fortawesome/free-solid-svg-icons';
 import ProcessDraft from './ProcessDraft';
+import DataExtractionProcess from './DataExtractionProcess';
+import { useNavigate } from 'react-router-dom';
 
 interface ProcessStage {
   id: string;
@@ -26,31 +29,25 @@ interface ProcessStage {
 }
 
 const ProcessDetails: React.FC = () => {
-  const [currentStage, setCurrentStage] = useState<string>('draft');
+  const [currentStage, setCurrentStage] = useState<string>('data-extraction');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const stages: ProcessStage[] = [
     {
       id: 'draft',
       name: 'Draft',
-      status: 'current',
+      status: 'completed',
       description: 'Configure process settings and data sources',
       icon: faEdit
     },
     {
       id: 'data-extraction',
       name: 'Data Extraction',
-      status: 'upcoming',
+      status: 'current',
       description: 'Extract and process data from sources',
       icon: faDownload
-    },
-    {
-      id: 'processing',
-      name: 'Processing',
-      status: 'upcoming',
-      description: 'Analyze and process extracted data',
-      icon: faPlay
     },
     {
       id: 'review',
@@ -58,6 +55,13 @@ const ProcessDetails: React.FC = () => {
       status: 'upcoming',
       description: 'Review and validate results',
       icon: faEye
+    },
+    {
+      id: 'wfbuilder',
+      name: 'Workflow Builder',
+      status: 'upcoming',
+      description: 'Build and test your workflow',
+      icon: faCode
     },
     {
       id: 'complete',
@@ -71,15 +75,15 @@ const ProcessDetails: React.FC = () => {
   const getStageStatusIcon = (stage: ProcessStage) => {
     switch (stage.status) {
       case 'completed':
-        return <FontAwesomeIcon icon={faCheck} className="w-3 h-3 text-green-500" />;
+        return <FontAwesomeIcon icon={faCheck} className="w-4 h-4 text-green-500" />;
       case 'current':
-        return <FontAwesomeIcon icon={faCircle} className="w-3 h-3 text-blue-500" />;
+        return <FontAwesomeIcon icon={faCircle} className="w-4 h-4 text-blue-500" />;
       case 'upcoming':
-        return <FontAwesomeIcon icon={faCircle} className="w-3 h-3 text-gray-300" />;
+        return <FontAwesomeIcon icon={faCircle} className="w-4 h-4 text-gray-300" />;
       case 'error':
-        return <FontAwesomeIcon icon={faCircle} className="w-3 h-3 text-red-500" />;
+        return <FontAwesomeIcon icon={faCircle} className="w-4 h-4 text-red-500" />;
       default:
-        return <FontAwesomeIcon icon={faCircle} className="w-3 h-3 text-gray-300" />;
+        return <FontAwesomeIcon icon={faCircle} className="w-4 h-4 text-gray-300" />;
     }
   };
 
@@ -125,20 +129,7 @@ const ProcessDetails: React.FC = () => {
       case 'draft':
         return <ProcessDraft />;
       case 'data-extraction':
-        return (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-            <div className="text-center">
-              <FontAwesomeIcon icon={faDownload} className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Data Extraction</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                This stage will handle data extraction from configured sources.
-              </p>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Configuration coming soon...
-              </div>
-            </div>
-          </div>
-        );
+        return <DataExtractionProcess />;
       default:
         return (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8">
@@ -156,30 +147,16 @@ const ProcessDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            {/* Left side - Back button and title */}
-            <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                <FontAwesomeIcon icon={faChevronLeft} className="w-5 h-5" />
-              </button>
-              <div>
-                < h3 className="text-xl font-bold text-gray-900 dark:text-white">Process Details</h3>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Process Info Header Strip */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-3">
+          <div className="flex items-center justify-between py-1">
             {/* Process Name */}
             <div className="flex items-center space-x-3">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Onboarding Process</h2>
+            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" onClick={() => navigate(-1)}>
+                <FontAwesomeIcon icon={faChevronLeft} className="w-5 h-5" />
+              </button>
+              <h4 className="font-semibold text-gray-900 dark:text-white">Customer Onboarding Process</h4>
             </div>
 
             {/* User Info and Timestamp */}
@@ -197,38 +174,57 @@ const ProcessDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Minimalistic Stepper */}
+      {/* Enterprise-Level Stepper */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-6 py-4 overflow-x-auto">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
             {stages.map((stage, index) => (
-              <div key={stage.id} className="flex items-center space-x-3 min-w-0">
+              <div key={stage.id} className="flex items-center flex-1">
                 {/* Stage Circle */}
                 <button
                   onClick={() => handleStageClick(stage.id)}
-                  className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                  disabled={stage.status === 'upcoming'}
+                  className={`group relative flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
                     stage.status === 'completed' || stage.status === 'current'
-                      ? 'cursor-pointer hover:scale-110'
-                      : 'cursor-not-allowed'
-                  } ${getStageStatusClass(stage)}`}
+                      ? 'cursor-pointer hover:scale-110 hover:shadow-lg'
+                      : 'cursor-not-allowed opacity-50'
+                  } ${
+                    stage.status === 'completed' ? 'border-green-500 bg-green-50 dark:bg-green-900/20' :
+                    stage.status === 'current' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' :
+                    stage.status === 'error' ? 'border-red-500 bg-red-50 dark:bg-red-900/20' :
+                    'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
+                  }`}
                 >
                   {getStageStatusIcon(stage)}
+                  
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    {stage.description}
+                  </div>
                 </button>
 
-                {/* Stage Name */}
-                <div className="min-w-0">
-                  <h3 className={`text-xs font-medium truncate ${
+                {/* Stage Label */}
+                <div className="ml-2 min-w-0">
+                  <h3 className={`text-xs font-semibold truncate ${
                     stage.status === 'current' ? 'text-blue-600 dark:text-blue-400' :
                     stage.status === 'completed' ? 'text-green-600 dark:text-green-400' :
+                    stage.status === 'error' ? 'text-red-600 dark:text-red-400' :
                     'text-gray-500 dark:text-gray-400'
                   }`}>
                     {stage.name}
                   </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                    {stage.description}
+                  </p>
                 </div>
 
                 {/* Connector Line */}
                 {index < stages.length - 1 && (
-                  <div className="flex-shrink-0 w-4 h-0.5 bg-gray-200 dark:bg-gray-600" />
+                  <div className="flex-1 mx-4">
+                    <div className={`h-0.5 rounded-full transition-all duration-300 ${
+                      stage.status === 'completed' ? 'bg-green-300 dark:bg-green-600' : 'bg-gray-200 dark:bg-gray-600'
+                    }`} />
+                  </div>
                 )}
               </div>
             ))}
@@ -237,7 +233,7 @@ const ProcessDetails: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {renderStageContent()}
       </div>
     </div>
