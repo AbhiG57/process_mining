@@ -22,6 +22,8 @@ import {
 import AddToolIntegrationModal from './AddToolIntegrationModal';
 import { faMicrosoft, faSlack, faJira, faGithub, faLine, faGoogleDrive } from '@fortawesome/free-brands-svg-icons';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ToastContainer';
 
 interface Integrations {
   teams: boolean;
@@ -80,6 +82,7 @@ const integrationList: Integration[] = [
 
 const AddProcess = () => {
   const navigate = useNavigate();
+  const { toasts, removeToast, showSuccess, showError, showWarning, showInfo } = useToast();
   const [activeTab, setActiveTab] = useState<string>('video');
   const [integrations, setIntegrations] = useState<Integrations>({
     teams: false,
@@ -155,6 +158,13 @@ const AddProcess = () => {
         file: file
       }));
       setUploadedFiles(prev => [...prev, ...newFiles]);
+      
+      // Show success toast
+      if (files.length === 1) {
+        showSuccess('File Uploaded', `${files[0].name} has been uploaded successfully.`);
+      } else {
+        showSuccess('Files Uploaded', `${files.length} files have been uploaded successfully.`);
+      }
     }
     // Reset input value to allow same file selection
     if (fileInputRef.current) {
@@ -186,14 +196,28 @@ const AddProcess = () => {
         file: file
       }));
       setUploadedFiles(prev => [...prev, ...newFiles]);
+      
+      // Show success toast for drag and drop
+      if (files.length === 1) {
+        showSuccess('File Added', `${files[0].name} has been added via drag and drop.`);
+      } else {
+        showSuccess('Files Added', `${files.length} files have been added via drag and drop.`);
+      }
     }
   };
 
   const removeFile = (fileId: string): void => {
+    const fileToRemove = uploadedFiles.find(file => file.id === fileId);
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+    
     // Clear preview if the removed file was selected
     if (selectedFileForPreview && selectedFileForPreview.id === fileId) {
       setSelectedFileForPreview(null);
+    }
+    
+    // Show info toast for file removal
+    if (fileToRemove) {
+      showInfo('File Removed', `${fileToRemove.name} has been removed from the process.`);
     }
   };
 
@@ -303,6 +327,13 @@ const AddProcess = () => {
       return newFiles;
     });
     setDraggedItem(null);
+    
+    // Show info toast for file reordering
+    const draggedFile = uploadedFiles.find(file => file.id === draggedItem);
+    const targetFile = uploadedFiles.find(file => file.id === targetFileId);
+    if (draggedFile && targetFile) {
+      showInfo('Files Reordered', `${draggedFile.name} has been moved to position ${uploadedFiles.findIndex(f => f.id === targetFileId) + 1}.`);
+    }
   };
 
   const handleDragEnd = (): void => {
@@ -325,14 +356,15 @@ const AddProcess = () => {
 
   const handleNext = (): void => {
     if (!processName.trim()) {
-      alert('Please enter a process name before proceeding.');
+      showError('Process Name Required', 'Please enter a process name before proceeding.');
       return;
     }
     
     if (uploadedFiles.length > 0) {
       setCurrentStep('review');
+      showSuccess('Moving to Review', 'Process configuration validated successfully.');
     } else {
-      alert('Please upload at least one file before proceeding to review.');
+      showWarning('Files Required', 'Please upload at least one file before proceeding to review.');
     }
   };
 
@@ -344,18 +376,18 @@ const AddProcess = () => {
   const handleSave = (): void => {
     console.log('Saving process configuration...');
     // Here you would typically save the process configuration
-    alert('Process configuration saved successfully!');
+    showSuccess('Configuration Saved', 'Process configuration has been saved successfully.');
   };
 
   const handleStartIngestion = (): void => {
     // Validate required fields
     if (!processName.trim()) {
-      alert('Please enter a process name');
+      showError('Process Name Required', 'Please enter a process name to continue.');
       return;
     }
     
     if (uploadedFiles.length === 0) {
-      alert('Please upload at least one file before starting ingestion');
+      showWarning('Files Required', 'Please upload at least one file before starting ingestion.');
       return;
     }
 
@@ -380,8 +412,8 @@ const AddProcess = () => {
       // Save to localStorage
       localStorage.setItem('processes', JSON.stringify(updatedProcesses));
 
-      // Show success message
-      alert('Data ingestion started successfully!');
+            // Show success message
+      showSuccess('Ingestion Started!', `Process "${processName.trim()}" has been created and data ingestion has begun.`);
       
       // Debug: Log the saved process
       console.log('New process saved:', newProcess);
@@ -391,7 +423,7 @@ const AddProcess = () => {
       navigate('/process');
     } catch (error) {
       console.error('Error saving process:', error);
-      alert('Failed to start ingestion process. Please try again.');
+      showError('Ingestion Failed', 'Failed to start ingestion process. Please try again.');
     }
   };
 
@@ -796,7 +828,13 @@ const AddProcess = () => {
                               <input
                                 type="text"
                                 value={processName || 'Marketing Data Analysis'}
-                                onChange={(e) => setProcessName(e.target.value)}
+                                onChange={(e) => {
+                                  const newName = e.target.value;
+                                  setProcessName(newName);
+                                  if (newName.trim() && newName !== processName) {
+                                    showInfo('Process Name Updated', `Process name has been updated to "${newName}".`);
+                                  }
+                                }}
                                 className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                 placeholder="Enter process name"
                               />
@@ -808,7 +846,13 @@ const AddProcess = () => {
                               <textarea
                                 rows={2}
                                 value={processDescription || 'Analyze key performance...'}
-                                onChange={(e) => setProcessDescription(e.target.value)}
+                                onChange={(e) => {
+                                  const newDesc = e.target.value;
+                                  setProcessDescription(newDesc);
+                                  if (newDesc.trim() && newDesc !== processDescription) {
+                                    showInfo('Context Updated', 'Sub process context has been updated.');
+                                  }
+                                }}
                                 className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                                 placeholder="Enter sub process context"
                               />
@@ -974,13 +1018,19 @@ const AddProcess = () => {
             </div>
           )}
         </div>
-        <AddToolIntegrationModal 
-          open={showAddIntegrationModal} 
-          onClose={handleCloseModal}
-          selectedTool={selectedTool}
-        />
-      </div>
-    );
-  };
+              <AddToolIntegrationModal 
+        open={showAddIntegrationModal} 
+        onClose={handleCloseModal}
+        selectedTool={selectedTool}
+      />
+      
+      {/* Toast Notifications */}
+      <ToastContainer 
+        toasts={toasts} 
+        onRemoveToast={removeToast} 
+      />
+    </div>
+  );
+};
 
 export default AddProcess

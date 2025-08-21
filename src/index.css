@@ -1,2 +1,34 @@
+/* Tailwind CSS */
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Toast Animations */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.slideOutRight {
+  animation: slideOutRight 0.3s ease-out;
+}
