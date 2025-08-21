@@ -8,7 +8,16 @@ import {
   faBolt,
   faTrash,
   faChevronLeft, faChevronRight,
-  faCog, faLink, faCloud, faSquare, faTimes, faGripVertical
+  faCog, faLink, faCloud, faSquare, faTimes, faGripVertical,
+  faChevronUp,
+  faChevronDown,
+  faDesktop,
+  faFileExcel,
+  faFilePdf,
+  faFileWord,
+  faFileImage,
+  faFileVideo,
+  faFileCsv
 } from '@fortawesome/free-solid-svg-icons';
 import AddToolIntegrationModal from './AddToolIntegrationModal';
 import { faMicrosoft, faSlack, faJira, faGithub, faLine, faGoogleDrive } from '@fortawesome/free-brands-svg-icons';
@@ -118,11 +127,12 @@ const AddProcess = () => {
   };
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('video/')) return faVideo;
-    if (fileType.startsWith('image/')) return faImage;
-    if (fileType.includes('pdf')) return faFileAlt;
-    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return faFileAlt;
-    if (fileType.includes('word') || fileType.includes('document')) return faFileAlt;
+    if (fileType.startsWith('video/')) return faFileVideo;
+    if (fileType.startsWith('image/')) return faFileImage;
+    if (fileType.includes('pdf')) return faFilePdf;
+    if (fileType.includes('excel') || fileType.includes('spreadsheet')) return faFileExcel;
+    if (fileType.includes('word') || fileType.includes('document')) return faFileWord;
+    if (fileType.includes('csv')) return faFileCsv;
     return faFileAlt;
   };
 
@@ -667,203 +677,310 @@ const AddProcess = () => {
           </>
         ) : (
           /* Review Input Data Step */
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Review Input Data</h2>
-              <p className="text-base text-gray-600 dark:text-gray-400">Review and verify the data files that will be processed for mining.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Review Input Data</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Review and verify the data files that will be processed for mining.</p>
             </div>
             
-            <div className="flex gap-8">
-              {/* Left Pane - File List */}
-              <div className="w-2/5">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <FontAwesomeIcon icon={faGripVertical} className="w-4 h-4 text-gray-400" />
-                    Review Your Data
-                  </h3>
-                  <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                    {uploadedFiles.length} file{uploadedFiles.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {uploadedFiles.length > 0 ? (
-                    uploadedFiles.map((file, index) => (
-                      <div 
-                        key={file.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, file.id)}
-                        onDragOver={handleDragOverReview}
-                        onDrop={(e) => handleDropReview(e, file.id)}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => handleFileSelect(file)}
-                        className={`flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all duration-200 border ${
-                          draggedItem === file.id ? 'opacity-50 scale-95 shadow-lg' : 
-                          selectedFileForPreview?.id === file.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500 shadow-md' :
-                          'hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500'
-                        }`}
-                      >
-                        {/* File Order Number */}
-                        <div className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300">
-                          {index + 1}
+            {/* File List with Expandable Rows */}
+            <div className="space-y-2">
+              {uploadedFiles.length > 0 ? (
+                uploadedFiles.map((file, index) => (
+                  <div key={file.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                    {/* Main Row - Always Visible */}
+                    <div 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, file.id)}
+                      onDragOver={handleDragOverReview}
+                      onDrop={(e) => handleDropReview(e, file.id)}
+                      onDragEnd={handleDragEnd}
+                      className={`flex items-center p-3 cursor-pointer transition-all duration-200 ${
+                        draggedItem === file.id ? 'opacity-50 scale-95 shadow-lg' : 
+                        selectedFileForPreview?.id === file.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500 shadow-md' :
+                        'hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {/* File Order Number */}
+                      <div className="w-6 h-6 bg-gray-200 dark:bg-gray-600 rounded-full flex items-center justify-center text-xs font-semibold text-gray-600 dark:text-gray-300 mr-3">
+                        {index + 1}
+                      </div>
+                      
+                      {/* File Type Icon */}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white mr-3 ${
+                        file.type.startsWith('video/') ? 'bg-purple-500' :
+                        file.type.startsWith('image/') ? 'bg-green-500' :
+                        file.type.includes('pdf') ? 'bg-red-500' :
+                        file.type.includes('excel') || file.type.includes('spreadsheet') ? 'bg-green-600' :
+                        file.type.includes('word') || file.type.includes('document') ? 'bg-blue-500' :
+                        file.type.includes('csv') ? 'bg-green-500' :
+                        'bg-gray-400'
+                      }`}>
+                        <FontAwesomeIcon 
+                          icon={getFileIcon(file.type)} 
+                          className="w-5 h-5" 
+                        />
+                      </div>
+                      
+                      {/* File Metadata */}
+                      <div className="flex-1 min-w-0 mr-3">
+                        <div className="font-medium text-gray-900 dark:text-white truncate text-sm mb-0.5">{file.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                          <span>{formatFileSize(file.size)}</span>
+                          <span className="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full"></span>
+                          <span className="capitalize">{file.type.split('/')[0]}</span>
                         </div>
-                        
-                        {/* File Type Icon with Better Colors */}
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
-                          file.type.startsWith('video/') ? 'bg-purple-500' :
-                          file.type.startsWith('image/') ? 'bg-green-500' :
-                          file.type.includes('pdf') ? 'bg-red-500' :
-                          file.type.includes('excel') || file.type.includes('spreadsheet') ? 'bg-green-600' :
-                          file.type.includes('word') || file.type.includes('document') ? 'bg-blue-500' :
-                          'bg-gray-400'
-                        }`}>
-                          {file.type.startsWith('video/') ? 'VID' :
-                           file.type.startsWith('image/') ? 'IMG' :
-                           file.type.includes('pdf') ? 'PDF' :
-                           file.type.includes('excel') || file.type.includes('spreadsheet') ? 'XL' :
-                           file.type.includes('word') || file.type.includes('document') ? 'WD' :
-                           'FILE'}
-                        </div>
-                        
-                        {/* File Info - More Compact */}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 dark:text-white truncate text-sm">{file.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-2">
-                            <span>{formatFileSize(file.size)}</span>
-                            <span className="w-1 h-1 bg-gray-400 dark:bg-gray-500 rounded-full"></span>
-                            <span className="capitalize">{file.type.split('/')[0]}</span>
-                          </div>
-                        </div>
-                        
-                        {/* Status Indicator */}
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-xs text-green-600 dark:text-green-400 font-medium">Ready</span>
-                        </div>
+                      </div>
+                      
+                      {/* Source Icon */}
+                      <div className="flex items-center gap-2 mr-3">
+                        <FontAwesomeIcon 
+                          icon={faDesktop} 
+                          className="w-4 h-4 text-blue-500" 
+                          title="Local file"
+                        />
+                      </div>
+                      
+                      {/* Status Indicator */}
+                      <div className="flex items-center gap-2 mr-3">
+                        <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-600 dark:text-green-400 font-medium">Ready</span>
+                      </div>
 
-                        {/* Delete Button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFile(file.id);
-                          }}
-                          className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
-                          title="Delete file"
-                        >
-                          <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-                      <FontAwesomeIcon icon={faUpload} className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                      <p className="text-base font-medium mb-1">No files uploaded yet</p>
-                      <p className="text-sm">Upload files above to see them here</p>
-                    </div>
-                  )}
-                </div>
-                
-                {/* File Processing Summary */}
-                {uploadedFiles.length > 0 && (
-                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Processing Summary</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Ready for ingestion</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">Total files:</span>
-                        <span className="font-medium">{uploadedFiles.length}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">Total size:</span>
-                        <span className="font-medium">
-                          {uploadedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024) < 1 ? 
-                            `${(uploadedFiles.reduce((acc, file) => acc + file.size, 0) / 1024).toFixed(1)} KB` : 
-                            `${(uploadedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(1)} MB`}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Right Pane - Preview */}
-              <div className="flex-1 bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
-                {selectedFileForPreview ? (
-                  <div className="h-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                          {selectedFileForPreview.name}
-                        </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          {formatFileSize(selectedFileForPreview.size)} • {selectedFileForPreview.type}
-                        </p>
-                      </div>
+                      {/* Expand/Collapse Button */}
                       <button
-                        onClick={() => setSelectedFileForPreview(null)}
-                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                        onClick={() => {
+                          if (selectedFileForPreview?.id === file.id) {
+                            setSelectedFileForPreview(null);
+                          } else {
+                            handleFileSelect(file);
+                          }
+                        }}
+                        className={`p-1.5 rounded-md transition-all duration-200 ${
+                          selectedFileForPreview?.id === file.id 
+                            ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
+                            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        }`}
+                        title={selectedFileForPreview?.id === file.id ? 'Collapse' : 'Expand'}
                       >
-                        <FontAwesomeIcon icon={faTimes} className="w-5 h-5" />
+                        <FontAwesomeIcon 
+                          icon={selectedFileForPreview?.id === file.id ? faChevronUp : faChevronDown} 
+                          className="w-3.5 h-3.5" 
+                        />
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(file.id);
+                        }}
+                        className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 ml-1"
+                        title="Delete file"
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <div className="h-[calc(100%-4rem)] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
-                      {renderFilePreview(selectedFileForPreview)}
+
+                    {/* Expanded Content - Additional Metadata and Preview */}
+                    {selectedFileForPreview?.id === file.id && (
+                      <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-white dark:bg-gray-800">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Left Side - Additional Metadata */}
+                          <div className="space-y-3">
+                            <h4 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Configuration Preview</h4>
+                            
+                            {/* Process Name */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Name</label>
+                              <input
+                                type="text"
+                                value={processName || 'Marketing Data Analysis'}
+                                onChange={(e) => setProcessName(e.target.value)}
+                                className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                placeholder="Enter process name"
+                              />
+                            </div>
+
+                            {/* Context */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sub Process Context</label>
+                              <textarea
+                                rows={2}
+                                value={processDescription || 'Analyze key performance...'}
+                                onChange={(e) => setProcessDescription(e.target.value)}
+                                className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                placeholder="Enter sub process context"
+                              />
+                            </div>
+
+                            {/* Tags */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tags</label>
+                              <div className="flex flex-wrap gap-1.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs">
+                                  Marketing
+                                  <button className="ml-1 text-purple-500 hover:text-purple-700 dark:hover:text-purple-200">
+                                    <FontAwesomeIcon icon={faTimes} className="w-2.5 h-2.5" />
+                                  </button>
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs">
+                                  Q4
+                                  <button className="ml-1 text-purple-500 hover:text-purple-700 dark:hover:text-purple-200">
+                                    <FontAwesomeIcon icon={faTimes} className="w-2.5 h-2.5" />
+                                  </button>
+                                </span>
+                                <button className="px-2 py-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-xs">
+                                  + Add tag
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Dependencies */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Dependencies</label>
+                              <select multiple className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[80px]">
+                                {uploadedFiles.map((file, idx) => (
+                                  <option key={file.id} value={file.id}>
+                                    {file.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Process Owner */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sub Process Owner</label>
+                              <select className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option>Bob Williams</option>
+                                <option>Jane Doe</option>
+                                <option>John Smith</option>
+                              </select>
+                            </div>
+
+                            {/* Assignment Group */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Assignment Group</label>
+                              <select className="w-full px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option>Select assignment group</option>
+                                <option>Marketing Team</option>
+                                <option>Data Team</option>
+                                <option>Analytics Team</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Right Side - File Preview */}
+                          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">File Preview</h4>
+                            <div className="h-64 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+                              {renderFilePreview(file)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  <FontAwesomeIcon icon={faUpload} className="w-10 h-10 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                  <p className="text-sm font-medium mb-1">No files uploaded yet</p>
+                  <p className="text-xs">Upload files above to see them here</p>
+                </div>
+              )}
+            </div>
+              
+              {/* Overall Context and Default Assignment Group - Above Processing Summary */}
+              {uploadedFiles.length > 0 && (
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="">
+                    {/* Overall Context */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Overall Context</label>
+                      <textarea
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                        placeholder="Enter overall context for the entire process..."
+                      />
+                    </div>
+
+                    {/* Default Assignment Group */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Default Assignment Group</label>
+                      <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option>Select default assignment group</option>
+                        <option>Marketing Team</option>
+                        <option>Data Team</option>
+                        <option>Analytics Team</option>
+                        <option>Operations Team</option>
+                        <option>Support Team</option>
+                      </select>
                     </div>
                   </div>
-                ) : uploadedFiles.length > 0 ? (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-16">
-                    <FontAwesomeIcon icon={faFileAlt} className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                    <p className="text-lg font-medium mb-2">Select a file to preview</p>
-                    <p className="text-base text-gray-400 dark:text-gray-500">Click on any file in the list to view its preview</p>
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-16">
-                    <FontAwesomeIcon icon={faFileAlt} className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                    <p className="text-lg font-medium mb-2">No files uploaded yet</p>
-                    <p className="text-base text-gray-400 dark:text-gray-500">Upload files above to see them here</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Review Action Buttons - Streamlined */}
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <button
-                onClick={handleBack}
-                className="px-6 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium flex items-center gap-2"
-              >
-                <FontAwesomeIcon icon={faChevronLeft} className="w-4 h-4" />
-                Back to Setup
-              </button>
+                </div>
+              )}
               
-              <div className="flex space-x-3">
+              {/* File Processing Summary */}
+              {uploadedFiles.length > 0 && (
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Processing Summary</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Ready for ingestion</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600 dark:text-gray-400">Total files:</span>
+                      <span className="font-medium">{uploadedFiles.length}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600 dark:text-gray-400">Total size:</span>
+                      <span className="font-medium">
+                        {uploadedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024) < 1 ? 
+                          `${(uploadedFiles.reduce((acc, file) => acc + file.size, 0) / 1024).toFixed(1)} KB` : 
+                          `${(uploadedFiles.reduce((acc, file) => acc + file.size, 0) / (1024 * 1024)).toFixed(1)} MB`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Review Action Buttons */}
+              <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <button
-                  onClick={handleSave}
-                  className="px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                  onClick={handleBack}
+                  className="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium flex items-center gap-2 text-sm"
                 >
-                  Save Configuration
+                  <FontAwesomeIcon icon={faChevronLeft} className="w-3.5 h-3.5" />
+                  Back to Setup
                 </button>
-                <button
-                  onClick={handleStartIngestion}
-                  className="px-8 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-                >
-                  <FontAwesomeIcon icon={faBolt} className="w-4 h-4" />
-                  Start Ingestion
-                </button>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleSave}
+                    className="px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium text-sm"
+                  >
+                    Save Configuration
+                  </button>
+                  <button
+                    onClick={handleStartIngestion}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center gap-2 text-sm"
+                  >
+                    <FontAwesomeIcon icon={faBolt} className="w-3.5 h-3.5" />
+                    Start Ingestion
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+        <AddToolIntegrationModal 
+          open={showAddIntegrationModal} 
+          onClose={handleCloseModal}
+          selectedTool={selectedTool}
+        />
       </div>
-      <AddToolIntegrationModal 
-        open={showAddIntegrationModal} 
-        onClose={handleCloseModal}
-        selectedTool={selectedTool}
-      />
-    </div>
-  );
-};
+    );
+  };
 
-export default AddProcess; 
+export default AddProcess
